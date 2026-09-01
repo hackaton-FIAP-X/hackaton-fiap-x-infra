@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Infra de apoio no cluster (PLT-2): Postgres, RabbitMQ, MinIO, Redis, Mailhog.
+# O namespace e o Secret `infra-credentials` vêm do overlay.
+
+resources:
+  - postgres/configmap.yaml
+  - postgres/service.yaml
+  - postgres/statefulset.yaml
+  - rabbitmq/service.yaml
+  - rabbitmq/statefulset.yaml
+  - minio/service.yaml
+  - minio/statefulset.yaml
+  - minio/job-createbuckets.yaml
+  - redis/service.yaml
+  - redis/statefulset.yaml
+  - mailhog/deployment.yaml
+  - mailhog/service.yaml

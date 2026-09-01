@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Manifests dos 3 serviços (PLT-1): Deployment + Service + ConfigMap por serviço.
+# O Secret `app-credentials` e o namespace vêm do overlay.
+
+resources:
+  - auth-service/configmap.yaml
+  - auth-service/service.yaml
+  - auth-service/deployment.yaml
+  - video-service/configmap.yaml
+  - video-service/service.yaml
+  - video-service/deployment.yaml
+  - video-processor/configmap.yaml
+  - video-processor/service.yaml
+  - video-processor/deployment.yaml

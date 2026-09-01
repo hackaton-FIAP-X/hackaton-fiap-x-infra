@@ -1,0 +1,13 @@
+# Cluster kind para desenvolvimento e demo do FIAP X.
+# 1 control-plane + 2 workers — suficiente para os 3 serviços + infra de apoio
+# e para demonstrar HPA / reschedule de pod entre nós (PLT-3).
+#
+# Sem extraPortMappings aqui de propósito: o Ingress NGINX entra na PLT-3.
+# Enquanto isso o acesso é via `kubectl port-forward`.
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: fiapx
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker

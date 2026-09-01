@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: video-processor-config
+  labels:
+    app.kubernetes.io/name: video-processor
+    app.kubernetes.io/part-of: fiapx
+data:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  # application.yml do video-processor lê RABBITMQ_HOST / RABBITMQ_PORT.
+  RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+  # Chaves no padrão Spring, para quando a auto-config do amqp for usada.
+  SPRING_RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
+  SPRING_RABBITMQ_PORT: "5672"
+  MINIO_ENDPOINT: "http://minio.fiapx.svc.cluster.local:9000"
+  MINIO_BUCKET_VIDEOS: "fiapx-videos"
+  MINIO_BUCKET_OUTPUTS: "fiapx-outputs"

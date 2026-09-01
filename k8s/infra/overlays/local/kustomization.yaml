@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Overlay local (kind). Secret com as credenciais da infra a partir de um
+# arquivo .env que NÃO é versionado (ver .env.example na raiz).
+# O Namespace é aplicado pelos scripts (kubectl apply -f k8s/namespace.yaml)
+# porque o Kustomize não permite referenciar arquivo acima do diretório do overlay.
+
+namespace: fiapx
+
+resources:
+  - ../../base
+
+secretGenerator:
+  - name: infra-credentials
+    envs:
+      - .env
+
+generatorOptions:
+  # Nome estável (sem sufixo de hash) — os manifests da base referenciam
+  # `infra-credentials` diretamente.
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/part-of: fiapx

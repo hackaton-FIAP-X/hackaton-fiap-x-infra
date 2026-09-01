@@ -1,0 +1,11 @@
+# Segredos reais — NUNCA versionar. Só o .env.example vai pro git.
+.env
+*.local.env
+k8s/**/overlays/local/.env
+k8s/**/overlays/*/.env
+
+# Ferramentas / temporários
+*.log
+.DS_Store
+kubeconfig
+*.kubeconfig

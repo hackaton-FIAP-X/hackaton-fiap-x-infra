@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-createbuckets
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/part-of: fiapx
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio-createbuckets
+        app.kubernetes.io/part-of: fiapx
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2024-10-08T09-37-26Z
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: infra-credentials
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: infra-credentials
+                  key: MINIO_ROOT_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              until mc alias set local http://minio.fiapx.svc.cluster.local:9000 \
+                "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+                echo "aguardando MinIO..."; sleep 3
+              done
+              mc mb --ignore-existing local/fiapx-videos
+              mc mb --ignore-existing local/fiapx-outputs
+              mc ls local
+              echo "buckets prontos: fiapx-videos, fiapx-outputs"

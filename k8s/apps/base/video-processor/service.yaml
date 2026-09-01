@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-processor
+  labels:
+    app.kubernetes.io/name: video-processor
+    app.kubernetes.io/part-of: fiapx
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: video-processor
+  ports:
+    - name: http
+      port: 8082
+      targetPort: http

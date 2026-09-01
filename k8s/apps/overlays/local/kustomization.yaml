@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Overlay local (kind). Segredos vêm de um .env NÃO versionado (ver .env.example).
+# Imagens são construídas localmente (scripts/build-images.sh) e injetadas no
+# cluster com `kind load` — sem depender do GHCR (push pro GHCR é PLT-6).
+# O Namespace é aplicado pelos scripts (kubectl apply -f k8s/namespace.yaml).
+
+namespace: fiapx
+
+resources:
+  - ../../base
+
+secretGenerator:
+  - name: app-credentials
+    envs:
+      - .env
+
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/part-of: fiapx
+
+images:
+  - name: ghcr.io/hackaton-fiap-x/auth-service
+    newTag: local
+  - name: ghcr.io/hackaton-fiap-x/video-service
+    newTag: local
+  - name: ghcr.io/hackaton-fiap-x/video-processor
+    newTag: local
+
+patches:
+  # No local os Dockerfiles atuais rodam `mvnw spring-boot:run` como root e
+  # escrevem em /app — a postura non-root fica só na base (intenção de produção,
+  # a ser cumprida pela imagem multi-stage em AUTH-8 / VID-11 / WRK-9).
+  # A imagem é local, então nunca puxar do registry.
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/securityContext/runAsNonRoot
+        value: false
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent

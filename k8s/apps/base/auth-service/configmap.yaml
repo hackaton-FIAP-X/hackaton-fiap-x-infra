@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  labels:
+    app.kubernetes.io/name: auth-service
+    app.kubernetes.io/part-of: fiapx
+data:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres.fiapx.svc.cluster.local:5432/authdb"
+  SPRING_DATA_REDIS_HOST: "redis.fiapx.svc.cluster.local"
+  SPRING_DATA_REDIS_PORT: "6379"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: fiapx
+data:
+  # Executado só na primeira inicialização (volume vazio).
+  # Cria um banco por serviço — auth-service e video-service.
+  01-create-databases.sql: |
+    CREATE DATABASE authdb;
+    CREATE DATABASE videodb;
