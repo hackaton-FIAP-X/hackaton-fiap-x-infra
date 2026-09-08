@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# O Namespace e aplicado pelos scripts (kubectl apply -f k8s/namespace.yaml).
+namespace: fiapx
+
+resources:
+  - ../../base

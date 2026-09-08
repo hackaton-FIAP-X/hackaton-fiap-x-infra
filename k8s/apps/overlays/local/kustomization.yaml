@@ -29,6 +29,14 @@ images:
   - name: ghcr.io/hackaton-fiap-x/video-processor
     newTag: local
 
+# PLT-3 — video-service com 2 replicas; video-processor comeca no piso do HPA
+# (2) e o autoscaler assume a partir dai.
+replicas:
+  - name: video-service
+    count: 2
+  - name: video-processor
+    count: 2
+
 patches:
   # No local os Dockerfiles atuais rodam `mvnw spring-boot:run` como root e
   # escrevem em /app — a postura non-root fica só na base (intenção de produção,

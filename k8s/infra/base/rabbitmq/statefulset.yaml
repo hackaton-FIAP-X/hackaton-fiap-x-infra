@@ -16,6 +16,11 @@ spec:
       labels:
         app.kubernetes.io/name: rabbitmq
         app.kubernetes.io/part-of: fiapx
+      annotations:
+        # plugin rabbitmq_prometheus ja vem habilitado na imagem -management
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "15692"
     spec:
       securityContext:
         fsGroup: 999
@@ -30,6 +35,8 @@ spec:
               containerPort: 5672
             - name: management
               containerPort: 15672
+            - name: metrics
+              containerPort: 15692
           env:
             - name: RABBITMQ_DEFAULT_USER
               valueFrom:

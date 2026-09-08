@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# PLT-7 — Prometheus + Grafana.
+# Grafana le a senha de admin do Secret `infra-credentials`, gerado pelo
+# overlay da infra — por isso deploy-infra.sh roda antes de deploy-observability.sh.
+
+resources:
+  - prometheus/rbac.yaml
+  - prometheus/configmap.yaml
+  - prometheus/deployment.yaml
+  - prometheus/service.yaml
+  - grafana/provisioning.yaml
+  - grafana/deployment.yaml
+  - grafana/service.yaml
+
+configMapGenerator:
+  - name: grafana-dashboards
+    files:
+      - grafana/dashboard-fiapx.json
+
+generatorOptions:
+  # o Deployment referencia o ConfigMap pelo nome fixo
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/part-of: fiapx

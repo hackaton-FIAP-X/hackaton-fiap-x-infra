@@ -1,0 +1,92 @@
+name: CI
+
+# PLT-5 — validacao dos manifests e scripts da plataforma.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: kustomize build + shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala kustomize
+        run: |
+          curl -sSL -o /tmp/kustomize.tar.gz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz"
+          tar xzf /tmp/kustomize.tar.gz -C /usr/local/bin
+          kustomize version
+
+      - name: Gera .env de CI (valores descartaveis, so para o build renderizar)
+        run: |
+          # O secretGenerator precisa do arquivo; valores reais nunca entram no repo.
+          for overlay in k8s/infra/overlays/local k8s/apps/overlays/local; do
+            sed 's/CHANGE_ME.*/ci-placeholder-value-0123456789abcdef/' .env.example > "$overlay/.env"
+          done
+
+      - name: kustomize build de todos os overlays
+        run: |
+          for o in infra apps observability ingress; do
+            kustomize build "k8s/$o/overlays/local" > "/tmp/$o.yaml"
+            echo "$o: $(grep -c '^kind:' "/tmp/$o.yaml") recursos"
+          done
+
+      - name: Valida os manifests contra os schemas do Kubernetes
+        run: |
+          curl -sSLo /tmp/kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar xzf /tmp/kubeconform.tar.gz -C /usr/local/bin kubeconform
+          kubeconform -strict -summary /tmp/infra.yaml /tmp/apps.yaml /tmp/observability.yaml /tmp/ingress.yaml
+
+      - name: Valida o docker-compose
+        # `docker compose config` nao roda aqui: os build contexts apontam para
+        # os repos irmaos (../auth-service etc), que nao existem no checkout do
+        # repo infra sozinho. Validamos a estrutura do arquivo.
+        run: |
+          python3 -c "
+          import yaml
+          d = yaml.safe_load(open('docker-compose.yml'))
+          svcs = d['services']
+          esperados = {'postgres','rabbitmq','minio','redis','mailhog',
+                       'auth-service','video-service','video-processor'}
+          faltando = esperados - svcs.keys()
+          assert not faltando, f'faltam servicos no compose: {sorted(faltando)}'
+          print(f'docker-compose OK: {len(svcs)} servicos, {len(d[\"volumes\"])} volumes')
+          "
+
+      - name: Dashboard do Grafana e JSON valido
+        run: |
+          python3 -c "
+          import json, sys
+          d = json.load(open('k8s/observability/base/grafana/dashboard-fiapx.json'))
+          assert d['uid'] == 'fiapx-overview', 'uid inesperado'
+          assert d['panels'], 'dashboard sem paineis'
+          print(f\"dashboard OK: {len(d['panels'])} paineis\")
+          "
+
+      - name: shellcheck nos scripts
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck -S warning scripts/*.sh
+
+      - name: Garante que nenhum .env foi versionado
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then
+            echo "::error::arquivo .env versionado — segredo em texto plano"
+            exit 1
+          fi
+          echo "ok: nenhum .env rastreado"
