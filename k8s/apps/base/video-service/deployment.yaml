@@ -15,6 +15,10 @@ spec:
       labels:
         app.kubernetes.io/name: video-service
         app.kubernetes.io/part-of: fiapx
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8081"
     spec:
       securityContext:
         runAsNonRoot: true

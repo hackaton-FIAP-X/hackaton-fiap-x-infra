@@ -2,12 +2,25 @@
 # 1 control-plane + 2 workers — suficiente para os 3 serviços + infra de apoio
 # e para demonstrar HPA / reschedule de pod entre nós (PLT-3).
 #
-# Sem extraPortMappings aqui de propósito: o Ingress NGINX entra na PLT-3.
-# Enquanto isso o acesso é via `kubectl port-forward`.
+# O control-plane recebe `ingress-ready=true` e os extraPortMappings 80/443:
+# é assim que o Ingress NGINX do kind fica acessível em http://localhost (PLT-3).
 apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 name: fiapx
 nodes:
   - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
   - role: worker
   - role: worker

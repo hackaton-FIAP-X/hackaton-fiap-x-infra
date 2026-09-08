@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fiapx
+  labels:
+    app.kubernetes.io/part-of: fiapx
+  annotations:
+    # Uploads de vídeo são grandes: o default do NGINX (1m) rejeitaria com 413.
+    nginx.ingress.kubernetes.io/proxy-body-size: "5g"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: fiapx.localhost
+      http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8080
+          - path: /videos
+            pathType: Prefix
+            backend:
+              service:
+                name: video-service
+                port:
+                  number: 8081
+    # Mesmas rotas sem host, para funcionar em http://localhost direto.
+    - http:
+        paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8080
+          - path: /videos
+            pathType: Prefix
+            backend:
+              service:
+                name: video-service
+                port:
+                  number: 8081

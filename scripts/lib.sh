@@ -8,9 +8,11 @@ NAMESPACE="${NAMESPACE:-fiapx}"
 # Raiz do repo infra/ (um nível acima de scripts/).
 INFRA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Raiz do workspace (contém auth-service/, video-service/, video-processor/, infra/).
+# shellcheck disable=SC2034  # consumida pelos scripts que dão source neste arquivo
 WORKSPACE_DIR="$(cd "${INFRA_DIR}/.." && pwd)"
 
 # Serviço  ->  contexto de build (diretório do repo)  ->  imagem
+# shellcheck disable=SC2034  # consumida pelos scripts que dão source neste arquivo
 SERVICES=(auth-service video-service video-processor)
 image_for() { echo "ghcr.io/hackaton-fiap-x/$1:local"; }
 
