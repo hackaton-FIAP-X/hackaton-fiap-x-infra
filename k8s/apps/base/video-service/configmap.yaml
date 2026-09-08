@@ -5,15 +5,29 @@ metadata:
   labels:
     app.kubernetes.io/name: video-service
     app.kubernetes.io/part-of: fiapx
+# Chaves conforme video-service/src/main/resources/application.yml (VID-1..VID-11).
 data:
   SPRING_PROFILES_ACTIVE: "k8s"
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres.fiapx.svc.cluster.local:5432/videodb"
-  SPRING_DATA_REDIS_HOST: "redis.fiapx.svc.cluster.local"
-  SPRING_DATA_REDIS_PORT: "6379"
-  SPRING_RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
-  SPRING_RABBITMQ_PORT: "5672"
-  MINIO_ENDPOINT: "http://minio.fiapx.svc.cluster.local:9000"
-  MINIO_BUCKET_VIDEOS: "fiapx-videos"
-  MINIO_BUCKET_OUTPUTS: "fiapx-outputs"
-  SPRING_MAIL_HOST: "mailhog.fiapx.svc.cluster.local"
-  SPRING_MAIL_PORT: "1025"
+  # o app usa SERVER_PORT e tem default 8080; fixamos 8081 para manter o
+  # esquema 8080/8081/8082 entre os tres servicos
+  SERVER_PORT: "8081"
+
+  DB_HOST: "postgres.fiapx.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "videodb"
+
+  RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
+  RABBITMQ_PORT: "5672"
+
+  REDIS_HOST: "redis.fiapx.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+  # Bucket unico com prefixos inputs/ e outputs/ (ver V1__criar_tabela_videos.sql)
+  STORAGE_ENDPOINT: "http://minio.fiapx.svc.cluster.local:9000"
+  STORAGE_PUBLIC_ENDPOINT: "http://localhost:9000"
+  STORAGE_BUCKET: "fiapx"
+  STORAGE_REGION: "us-east-1"
+
+  # Validacao offline do token pela JWKS do auth-service (VID-2)
+  JWT_JWKS_URI: "http://auth-service.fiapx.svc.cluster.local:8080/.well-known/jwks.json"
+  JWT_ISSUER: "fiapx-auth"

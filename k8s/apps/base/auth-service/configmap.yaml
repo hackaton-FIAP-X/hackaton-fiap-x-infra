@@ -5,8 +5,9 @@ metadata:
   labels:
     app.kubernetes.io/name: auth-service
     app.kubernetes.io/part-of: fiapx
+# Chaves conforme auth-service/src/main/resources/application.yml (AUTH-1/AUTH-2).
 data:
   SPRING_PROFILES_ACTIVE: "k8s"
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres.fiapx.svc.cluster.local:5432/authdb"
-  SPRING_DATA_REDIS_HOST: "redis.fiapx.svc.cluster.local"
-  SPRING_DATA_REDIS_PORT: "6379"
+  DB_HOST: "postgres.fiapx.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "authdb"

@@ -35,21 +35,23 @@ spec:
                 name: video-service-config
             - secretRef:
                 name: app-credentials
+          # VID-10/VID-11 habilitaram management.endpoint.health.probes:
+          # readiness inclui `db`, entao o pod so entra no Service com o banco de pe.
           startupProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
-            periodSeconds: 10
-            failureThreshold: 60
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: http
             periodSeconds: 20
             failureThreshold: 3

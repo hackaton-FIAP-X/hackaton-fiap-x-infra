@@ -69,9 +69,8 @@ services:
     entrypoint: >
       sh -c "
         mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
-        mc mb --ignore-existing local/fiapx-videos &&
-        mc mb --ignore-existing local/fiapx-outputs &&
-        echo 'buckets prontos: fiapx-videos, fiapx-outputs'
+        mc mb --ignore-existing local/fiapx &&
+        echo 'bucket pronto: fiapx'
       "
     restart: 'no'
 
@@ -102,13 +101,12 @@ services:
       redis: {condition: service_healthy}
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/authdb
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: '6379'
-      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: authdb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PASSWORD_PEPPER: ${PASSWORD_PEPPER}
     restart: unless-stopped
 
   video-service:
@@ -120,24 +118,26 @@ services:
       redis: {condition: service_healthy}
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/videodb
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: '5672'
-      SPRING_RABBITMQ_USERNAME: ${SPRING_RABBITMQ_USERNAME}
-      SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: '6379'
+      SERVER_PORT: '8081'
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: videodb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: '5672'
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
       SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_VIDEOS: fiapx-videos
-      MINIO_BUCKET_OUTPUTS: fiapx-outputs
-      SPRING_MAIL_HOST: mailhog
-      SPRING_MAIL_PORT: '1025'
-      JWT_SECRET: ${JWT_SECRET}
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_ENDPOINT: http://localhost:9000
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      STORAGE_BUCKET: fiapx
+      JWT_JWKS_URI: http://auth-service:8080/.well-known/jwks.json
+      JWT_ISSUER: fiapx-auth
     restart: unless-stopped
 
   video-processor:
@@ -151,16 +151,11 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: '5672'
       RABBITMQ_USER: ${RABBITMQ_USER}
-      RABBITMQ_PASS: ${RABBITMQ_PASS}
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: '5672'
-      SPRING_RABBITMQ_USERNAME: ${SPRING_RABBITMQ_USERNAME}
-      SPRING_RABBITMQ_PASSWORD: ${SPRING_RABBITMQ_PASSWORD}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET_VIDEOS: fiapx-videos
-      MINIO_BUCKET_OUTPUTS: fiapx-outputs
+      RABBITMQ_PASS: ${RABBITMQ_PASSWORD}
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+      STORAGE_BUCKET: fiapx
     restart: unless-stopped
 
 volumes:

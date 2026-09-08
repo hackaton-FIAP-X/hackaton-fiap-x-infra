@@ -38,16 +38,23 @@ replicas:
     count: 2
 
 patches:
-  # No local os Dockerfiles atuais rodam `mvnw spring-boot:run` como root e
-  # escrevem em /app — a postura non-root fica só na base (intenção de produção,
-  # a ser cumprida pela imagem multi-stage em AUTH-8 / VID-11 / WRK-9).
-  # A imagem é local, então nunca puxar do registry.
+  # A imagem é construída localmente, então nunca puxar do registry.
   - target:
       kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+
+  # auth-service e video-processor ainda usam o Dockerfile de dev, que roda
+  # `mvnw spring-boot:run` como root e escreve em /app. Relaxamos non-root
+  # só neles; a postura endurecida continua na base como intenção de produção.
+  # Sai daqui quando AUTH-8 e WRK-9 entregarem a imagem multi-stage —
+  # o video-service já saiu, porque a VID-11 entregou a dele.
+  - target:
+      kind: Deployment
+      name: auth-service|video-processor
     patch: |-
       - op: replace
         path: /spec/template/spec/securityContext/runAsNonRoot
         value: false
-      - op: add
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: IfNotPresent

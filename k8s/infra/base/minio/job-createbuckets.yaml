@@ -38,7 +38,8 @@ spec:
                 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
                 echo "aguardando MinIO..."; sleep 3
               done
-              mc mb --ignore-existing local/fiapx-videos
-              mc mb --ignore-existing local/fiapx-outputs
+              # Bucket unico. Os prefixos inputs/ e outputs/ sao criados pelo
+              # proprio app (ver storage_key/zip_key em V1__criar_tabela_videos.sql).
+              mc mb --ignore-existing local/fiapx
               mc ls local
-              echo "buckets prontos: fiapx-videos, fiapx-outputs"
+              echo "bucket pronto: fiapx"
