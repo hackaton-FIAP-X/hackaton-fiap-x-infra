@@ -13,4 +13,4 @@ fi
 kubectl apply -k "${INFRA_DIR}/k8s/ingress/overlays/local"
 kubectl -n "${NAMESPACE}" get ingress
 
-log "teste:  curl -i http://localhost/auth/actuator/health"
+log "teste:  curl -s http://localhost/.well-known/jwks.json"

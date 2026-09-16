@@ -1,6 +1,11 @@
 # PLT-4 — ambiente de desenvolvimento completo sem Kubernetes.
 #
 # Caminho rapido para desenvolver: sobe infra de apoio + os tres servicos.
+#
+# Os servicos usam as MESMAS imagens do kind (ghcr.io/hackaton-fiap-x/*:local),
+# construidas por ./scripts/build-images.sh — `make compose-up` ja faz isso.
+# Nao ha `build:` aqui de proposito: o build do video-service precisa do
+# security-commons injetado (ver build-images.sh) e o compose nao sabe fazer.
 # Para a demo de escalabilidade (Ingress/HPA) use o kind: ./scripts/kind-up.sh
 #
 #   cd infra
@@ -45,7 +50,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    image: quay.io/minio/minio:RELEASE.2024-10-13T13-34-11Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -60,7 +65,7 @@ services:
       retries: 10
 
   minio-createbuckets:
-    image: minio/mc:RELEASE.2024-10-08T09-37-26Z
+    image: quay.io/minio/mc:RELEASE.2024-10-08T09-37-26Z
     depends_on:
       minio: {condition: service_healthy}
     environment:
@@ -94,10 +99,7 @@ services:
 
   # --------------------------------------------------------------- servicos ---
   auth-service:
-    # AUTH-8: imagem multi-stage, JRE, usuario nao-root
-    build:
-      context: ../auth-service
-      dockerfile: Dockerfile.prod
+    image: ghcr.io/hackaton-fiap-x/auth-service:local
     ports: ['8080:8080']
     depends_on:
       postgres: {condition: service_healthy}
@@ -120,15 +122,16 @@ services:
     restart: unless-stopped
 
   video-service:
-    build: ../video-service
-    ports: ['8081:8081', '5006:5005']
+    image: ghcr.io/hackaton-fiap-x/video-service:local
+    # O app escuta 8080 dentro do container, que e a porta que o HEALTHCHECK
+    # do Dockerfile dele (VID-11) testa. No host fica 8081.
+    ports: ['8081:8080']
     depends_on:
       postgres: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
       redis: {condition: service_healthy}
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SERVER_PORT: '8081'
       DB_HOST: postgres
       DB_PORT: '5432'
       DB_NAME: videodb
@@ -151,7 +154,7 @@ services:
     restart: unless-stopped
 
   video-processor:
-    build: ../video-processor
+    image: ghcr.io/hackaton-fiap-x/video-processor:local
     ports: ['8082:8082', '5007:5005']
     depends_on:
       rabbitmq: {condition: service_healthy}

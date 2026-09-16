@@ -19,15 +19,8 @@ help: ## Lista os alvos disponiveis
 	@echo
 	@echo "Caminho rapido:  make env && make up && make verify && make demo"
 
-env: ## Cria o .env a partir do template e gera as chaves JWT (preencha as senhas)
-	@if [ -f .env ]; then \
-		echo "[infra] .env ja existe."; \
-	else \
-		cp .env.example .env; \
-		echo "[infra] .env criado."; \
-	fi
-	@./scripts/gen-jwt-keys.sh
-	@echo "[infra] Agora troque os CHANGE_ME restantes (senhas e PASSWORD_PEPPER) antes de 'make up'."
+env: ## Cria o .env com senhas aleatorias consistentes e o par RSA dos JWT
+	./scripts/gen-env.sh
 
 jwt-keys: ## Gera um novo par RSA dos JWT no .env (invalida tokens ja emitidos)
 	./scripts/gen-jwt-keys.sh --force
@@ -69,14 +62,8 @@ verify: ## Checa os criterios de aceite (PLT-1 e PLT-2)
 demo: ## Abre os port-forwards e imprime as URLs (Ctrl-C encerra)
 	./scripts/demo.sh
 
-load: ## Teste de carga k6 (PLT-10)
-	@if [ -f k6/upload-load-test.js ]; then \
-		k6 run k6/upload-load-test.js; \
-	else \
-		echo "[infra] k6/upload-load-test.js ainda nao existe — PLT-10 pendente."; \
-		echo "[infra] Depende dos endpoints de upload (trilha B)."; \
-		exit 1; \
-	fi
+load: ## Teste de carga k6: 50 uploads simultaneos (PLT-10). UPLOADS=N WAIT=true
+	k6 run -e UPLOADS=$(or $(UPLOADS),50) -e WAIT_FOR_PROCESSING=$(or $(WAIT),false) k6/upload-load-test.js
 
 ps: ## Estado dos pods, PVCs, services e HPA
 	kubectl -n $(NAMESPACE) get pods,pvc,svc,hpa,ingress
@@ -97,7 +84,13 @@ down: ## Destroi o cluster kind (apaga os volumes)
 # -------------------------------------------------------- docker compose ----
 
 compose-up: ## Sobe o ambiente completo via docker compose (sem Kubernetes)
-	docker compose up -d --build
+	@test -f .env || ./scripts/gen-env.sh
+	./scripts/build-images.sh
+	@# --wait sem lista de servicos falha quando um container de execucao unica
+	@# (minio-createbuckets) termina, mesmo com exit 0. Sobe tudo e espera so
+	@# os servicos de longa duracao que tem healthcheck.
+	docker compose up -d
+	docker compose up -d --wait --wait-timeout 300 postgres rabbitmq minio redis auth-service video-service
 	@echo "[infra] RabbitMQ :15672 | MinIO :9001 | Mailhog :8025"
 
 compose-down: ## Derruba o docker compose e remove os volumes
