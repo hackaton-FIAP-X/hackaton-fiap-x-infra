@@ -94,8 +94,11 @@ services:
 
   # --------------------------------------------------------------- servicos ---
   auth-service:
-    build: ../auth-service
-    ports: ['8080:8080', '5005:5005']
+    # AUTH-8: imagem multi-stage, JRE, usuario nao-root
+    build:
+      context: ../auth-service
+      dockerfile: Dockerfile.prod
+    ports: ['8080:8080']
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -106,7 +109,14 @@ services:
       DB_NAME: authdb
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      # rate limit do login (AUTH-6)
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD}
+      # obrigatorios — o servico nao inicia sem eles (./scripts/gen-jwt-keys.sh)
       PASSWORD_PEPPER: ${PASSWORD_PEPPER}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
     restart: unless-stopped
 
   video-service:

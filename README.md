@@ -27,8 +27,8 @@ Não precisa de `helm` nem de `kustomize` avulso.
 
 ```bash
 cd infra
-make env            # cria .env a partir do template
-$EDITOR .env        # troque todos os CHANGE_ME
+make env            # cria .env e gera o par RSA dos JWT
+$EDITOR .env        # troque os CHANGE_ME restantes (senhas e PASSWORD_PEPPER)
 make up             # cluster + addons + imagens + infra + serviços + observabilidade + ingress
 make verify         # checa os critérios de aceite
 make demo           # abre os port-forwards e imprime as URLs
@@ -39,6 +39,7 @@ make demo           # abre os port-forwards e imprime as URLs
 Sem `make`, na mesma ordem:
 
 ```bash
+cp .env.example .env && ./scripts/gen-jwt-keys.sh   # e preencha as senhas
 ./scripts/kind-up.sh
 ./scripts/deploy-addons.sh        # Ingress NGINX + metrics-server
 ./scripts/build-images.sh && ./scripts/load-images.sh
@@ -74,7 +75,7 @@ Namespace único: **`fiapx`**. DNS interno: `<serviço>.fiapx.svc.cluster.local`
 |---|---|---|---|
 | PostgreSQL 16 | StatefulSet | PVC 1Gi | 5432 — bancos `authdb`, `videodb` |
 | RabbitMQ 3.13 | StatefulSet | PVC 1Gi | 5672 (amqp), 15672 (mgmt), 15692 (métricas) |
-| MinIO | StatefulSet | PVC 2Gi | 9000 (api), 9001 (console) — buckets `fiapx-videos`, `fiapx-outputs` |
+| MinIO | StatefulSet | PVC 2Gi | 9000 (api), 9001 (console) — bucket `fiapx` (prefixos `inputs/`, `outputs/`) |
 | Redis 7 | StatefulSet | PVC 512Mi (AOF) | 6379 |
 | Mailhog | Deployment | — | 1025 (smtp), 8025 (ui) |
 
@@ -87,9 +88,35 @@ Ressalva: `make down` / `kind delete cluster` apagam os volumes.
 
 `Deployment` + `Service` (ClusterIP) + `ConfigMap` + `envFrom` do Secret
 `app-credentials`, para `auth-service` (8080), `video-service` (8081) e
-`video-processor` (8082). Probes de liveness/readiness/startup em
-`/actuator/health`; a `startupProbe` é folgada porque a imagem de dev compila
-no start.
+`video-processor` (8082). As chaves de ambiente seguem os `application.yml` de
+cada serviço (`DB_*`, `REDIS_*`, `STORAGE_*`…) — não as `SPRING_*` padrão.
+
+Pods rodam como não-root com UID/GID numéricos (`10001`): as imagens declaram
+`USER` por nome e, sem UID numérico, o kubelet recusa o pod com `runAsNonRoot`.
+Só o `video-processor` fica como root, porque ainda usa o Dockerfile de dev —
+sai da exceção quando a WRK-9 entregar a imagem dele.
+
+`build-images.sh` usa o `Dockerfile.prod` do serviço quando existe (hoje, o
+auth-service — AUTH-8) e o `Dockerfile` padrão nos demais.
+
+#### auth-service
+
+| O que | De onde vem |
+|---|---|
+| `POST /auth/register`, `POST /auth/login` | Ingress em `/auth` |
+| `GET /.well-known/jwks.json` | Ingress (chave pública — permite validar o token no jwt.io) |
+| Assinatura RS256 | `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY`, gerados por `./scripts/gen-jwt-keys.sh` |
+| Hash de senha (Argon2id + pepper) | `PASSWORD_PEPPER` |
+| Rate limit do login (10/min por IP) | Redis do cluster (`REDIS_HOST`) |
+
+Sem `PASSWORD_PEPPER` e sem o par RSA o serviço **não inicia** (fail-fast
+intencional da trilha A). O `video-service` valida os tokens offline pela
+JWKS interna (`http://auth-service.fiapx.svc.cluster.local:8080/.well-known/jwks.json`).
+
+O rate limit identifica o cliente pelo `X-Forwarded-For`. O ingress-nginx, no
+default (`use-forwarded-headers: false`), reescreve esse header com o IP real
+da conexão — então não dá para forjar IP pelo Ingress. Não habilite
+`use-forwarded-headers` sem um proxy confiável na frente.
 
 ### Ingress e escala (PLT-3) — `k8s/ingress/`
 
@@ -122,10 +149,20 @@ Ver a escalada ao vivo: `make hpa` — e `make top` para o consumo.
 
 Com o Ingress (PLT-3):
 
+```bash
+curl -X POST http://localhost/auth/register -H 'Content-Type: application/json' \
+  -d '{"name":"Alice","email":"alice@fiapx.local","password":"senha-forte-123"}'
+
+TOKEN=$(curl -s -X POST http://localhost/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"alice@fiapx.local","password":"senha-forte-123"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+
+curl http://localhost/videos -H "Authorization: Bearer $TOKEN"
+curl http://localhost/.well-known/jwks.json
 ```
-http://localhost/auth/actuator/health
-http://localhost/videos/actuator/health
-```
+
+`make verify` roda esse fluxo automaticamente (register, 409 no duplicado, login,
+`iss`/`alg` do token, 401 com senha errada, token aceito pelo video-service,
+401 sem token e 429 no rate limit).
 
 O resto via `make demo`, que abre os port-forwards:
 

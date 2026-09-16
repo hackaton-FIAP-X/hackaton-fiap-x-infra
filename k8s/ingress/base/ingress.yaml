@@ -9,6 +9,11 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: "5g"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+# Rate limit do login (AUTH-6): o auth-service identifica o cliente pelo
+# primeiro IP do X-Forwarded-For. Com o default do ingress-nginx
+# (use-forwarded-headers: false) esse header e reescrito com o IP real da
+# conexao, entao o cliente nao consegue forjar outro IP para fugir do limite.
+# NAO habilite use-forwarded-headers sem um proxy confiavel na frente.
 spec:
   ingressClassName: nginx
   rules:
@@ -17,6 +22,15 @@ spec:
         paths:
           - path: /auth
             pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8080
+          # JWKS publica (AUTH-4). Chave publica, sem segredo — expor permite
+          # validar o token no jwt.io, que e criterio de aceite da AUTH-3.
+          - path: /.well-known/jwks.json
+            pathType: Exact
             backend:
               service:
                 name: auth-service
@@ -34,6 +48,15 @@ spec:
         paths:
           - path: /auth
             pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8080
+          # JWKS publica (AUTH-4). Chave publica, sem segredo — expor permite
+          # validar o token no jwt.io, que e criterio de aceite da AUTH-3.
+          - path: /.well-known/jwks.json
+            pathType: Exact
             backend:
               service:
                 name: auth-service

@@ -5,9 +5,17 @@ metadata:
   labels:
     app.kubernetes.io/name: auth-service
     app.kubernetes.io/part-of: fiapx
-# Chaves conforme auth-service/src/main/resources/application.yml (AUTH-1/AUTH-2).
+# Chaves conforme auth-service/src/main/resources/application.yml (AUTH-1..AUTH-8).
+# Segredos (DB_PASSWORD, PASSWORD_PEPPER, JWT_PRIVATE_KEY, JWT_PUBLIC_KEY,
+# SPRING_DATA_REDIS_PASSWORD) vem do Secret app-credentials.
 data:
   SPRING_PROFILES_ACTIVE: "k8s"
+
   DB_HOST: "postgres.fiapx.svc.cluster.local"
   DB_PORT: "5432"
   DB_NAME: "authdb"
+
+  # Rate limit do login (AUTH-6): contador Bucket4j compartilhado no Redis, entao
+  # o limite vale para todas as replicas. Se o Redis cair, o filtro falha aberto.
+  REDIS_HOST: "redis.fiapx.svc.cluster.local"
+  REDIS_PORT: "6379"

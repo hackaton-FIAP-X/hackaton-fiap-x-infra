@@ -46,15 +46,19 @@ patches:
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: IfNotPresent
 
-  # auth-service e video-processor ainda usam o Dockerfile de dev, que roda
-  # `mvnw spring-boot:run` como root e escreve em /app. Relaxamos non-root
-  # só neles; a postura endurecida continua na base como intenção de produção.
-  # Sai daqui quando AUTH-8 e WRK-9 entregarem a imagem multi-stage —
-  # o video-service já saiu, porque a VID-11 entregou a dele.
+  # O video-processor ainda usa o Dockerfile de dev, que roda `mvnw
+  # spring-boot:run` como root e escreve em /app. So ele tem a postura
+  # non-root relaxada; sai daqui quando a WRK-9 entregar a imagem dele.
+  # auth-service (AUTH-8, Dockerfile.prod) e video-service (VID-11) ja rodam
+  # como nao-root.
   - target:
       kind: Deployment
-      name: auth-service|video-processor
+      name: video-processor
     patch: |-
       - op: replace
         path: /spec/template/spec/securityContext/runAsNonRoot
         value: false
+      - op: remove
+        path: /spec/template/spec/securityContext/runAsUser
+      - op: remove
+        path: /spec/template/spec/securityContext/runAsGroup

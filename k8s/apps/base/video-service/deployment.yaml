@@ -22,6 +22,12 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # UID/GID numericos sao obrigatorios: as imagens declaram USER por nome
+        # (spring, fiapx) e com runAsNonRoot o kubelet recusa o pod quando nao
+        # consegue provar que o usuario nao e root. Os arquivos da aplicacao sao
+        # legiveis por todos (644) e a JVM so escreve em /tmp.
+        runAsUser: 10001
+        runAsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       containers:

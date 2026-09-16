@@ -8,7 +8,7 @@ SHELL := /bin/bash
 NAMESPACE ?= fiapx
 CLUSTER   ?= fiapx
 
-.PHONY: help env up addons deploy observability ingress images verify demo load \
+.PHONY: help env jwt-keys up addons deploy observability ingress images verify demo load \
         ps logs top hpa down compose-up compose-down compose-logs validate
 
 help: ## Lista os alvos disponiveis
@@ -19,13 +19,18 @@ help: ## Lista os alvos disponiveis
 	@echo
 	@echo "Caminho rapido:  make env && make up && make verify && make demo"
 
-env: ## Cria o .env a partir do template (preencha os CHANGE_ME)
+env: ## Cria o .env a partir do template e gera as chaves JWT (preencha as senhas)
 	@if [ -f .env ]; then \
-		echo "[infra] .env ja existe — nada a fazer."; \
+		echo "[infra] .env ja existe."; \
 	else \
 		cp .env.example .env; \
-		echo "[infra] .env criado. Edite e troque os CHANGE_ME antes de 'make up'."; \
+		echo "[infra] .env criado."; \
 	fi
+	@./scripts/gen-jwt-keys.sh
+	@echo "[infra] Agora troque os CHANGE_ME restantes (senhas e PASSWORD_PEPPER) antes de 'make up'."
+
+jwt-keys: ## Gera um novo par RSA dos JWT no .env (invalida tokens ja emitidos)
+	./scripts/gen-jwt-keys.sh --force
 
 # ------------------------------------------------------------------ kind ----
 
