@@ -4,9 +4,9 @@ Repositório de plataforma do Hackathon FIAP X (Sistema de Processamento de Víd
 Sobe um cluster **kind** local com a infra de apoio, os três serviços, Ingress,
 HPA e observabilidade — ou tudo via **docker compose**, se você não quiser Kubernetes.
 
-Trilha PLT (Plataforma): **PLT-1, PLT-2, PLT-3, PLT-4, PLT-5 e PLT-7 entregues.**
-Pendentes: PLT-6 (CD/GHCR), PLT-8 (notificação por e-mail), PLT-9 (script do banco,
-mora em `docs/database/schema.sql`), PLT-10 (carga com k6).
+Trilha PLT (Plataforma): **PLT-1, 2, 3, 4, 5, 6, 7 e 10** no repo.
+Fora deste repo: PLT-8 (notificação por e-mail, no video-service) e PLT-9
+(`schema.sql`, no repo docs).
 
 ---
 
@@ -27,19 +27,20 @@ Não precisa de `helm` nem de `kustomize` avulso.
 
 ```bash
 cd infra
-make env            # cria .env e gera o par RSA dos JWT
-$EDITOR .env        # troque os CHANGE_ME restantes (senhas e PASSWORD_PEPPER)
+make env            # gera .env com senhas aleatórias consistentes e o par RSA dos JWT
 make up             # cluster + addons + imagens + infra + serviços + observabilidade + ingress
 make verify         # checa os critérios de aceite
 make demo           # abre os port-forwards e imprime as URLs
 ```
 
-`make up` leva ~10 min numa máquina limpa (a maior parte é o build das imagens Java).
+`make up` leva ~15 min numa máquina limpa (a maior parte é o Maven baixando
+dependências no build das imagens). Validado de ponta a ponta num kind real:
+`make verify` passa com 37/37 checagens.
 
 Sem `make`, na mesma ordem:
 
 ```bash
-cp .env.example .env && ./scripts/gen-jwt-keys.sh   # e preencha as senhas
+./scripts/gen-env.sh
 ./scripts/kind-up.sh
 ./scripts/deploy-addons.sh        # Ingress NGINX + metrics-server
 ./scripts/build-images.sh && ./scripts/load-images.sh
@@ -56,12 +57,13 @@ Derrubar: `make down` (apaga o cluster e os volumes).
 
 ```bash
 cd infra
-make env && $EDITOR .env
+make env
 make compose-up
 ```
 
-Caminho mais leve para desenvolver. Não tem Ingress nem HPA — para a demo de
-escalabilidade use o kind.
+Caminho mais leve para desenvolver. Usa as mesmas imagens do kind (o alvo já
+roda o `build-images.sh`). Portas no host: auth `8080`, video `8081`, processor
+`8082`. Não tem Ingress nem HPA — para a demo de escalabilidade use o kind.
 
 ---
 
@@ -98,6 +100,12 @@ sai da exceção quando a WRK-9 entregar a imagem dele.
 
 `build-images.sh` usa o `Dockerfile.prod` do serviço quando existe (hoje, o
 auth-service — AUTH-8) e o `Dockerfile` padrão nos demais.
+
+**security-commons**: desde a AUTH-5 o video-service baixa esse módulo do GitHub
+Packages, que pede token `read:packages` até para leitura — sem ele o build
+quebra com 401. Com o repo do auth-service ao lado, o `build-images.sh` compila o
+módulo localmente e o injeta no build via `--build-context`, sem precisar de
+token e sem copiar o Dockerfile do serviço.
 
 #### auth-service
 
@@ -182,6 +190,32 @@ O resto via `make demo`, que abre os port-forwards:
 Nenhum segredo em texto plano no repositório — ver [`docs/secrets.md`](docs/secrets.md).
 Só `.env.example` (com `CHANGE_ME`) é versionado; o `.env` real é git-ignored; o
 Kustomize `secretGenerator` materializa os `Secret` apenas dentro do cluster.
+
+## Teste de carga (PLT-10)
+
+```bash
+make load                      # 50 uploads simultâneos pelo Ingress
+make load UPLOADS=100 WAIT=true  # espera cada vídeo chegar a COMPLETED
+```
+
+`k6/upload-load-test.js` cria um usuário, faz login uma vez (para não esbarrar no
+rate limit) e dispara os uploads todos juntos com um MP4 real de 3s
+(`k6/fixtures/sample-3s.mp4`). Falha se algum upload for recusado, se algum
+upload aceito (202) não estiver persistido, ou — com `WAIT=true` — se algum
+vídeo não for processado. Relatórios em `docs/load/`.
+
+Sem o `video-processor`, rode sem `WAIT`: prova que nenhuma requisição aceita se
+perde na entrada. A prova completa ("processados = enviados") precisa do worker.
+
+## CD (PLT-6)
+
+`.github/workflows/cd.yml`, a cada merge na `main` do infra (ou disparado por um
+serviço via `repository_dispatch`): checkout dos 4 repos lado a lado → build das
+3 imagens → push no GHCR com a tag do SHA (e `latest`) → kind efêmero → deploy
+de tudo → `scripts/verify.sh` como smoke test.
+
+Precisa do segredo **`SERVICES_READ_TOKEN`** no repo infra (leitura dos repos dos
+serviços), a menos que eles sejam públicos.
 
 ## CI (PLT-5)
 
