@@ -7,8 +7,9 @@ name: CD
 #   1. faz checkout do infra e dos 3 servicos lado a lado, como no workspace local;
 #   2. constroi as 3 imagens com os mesmos scripts do `make up`;
 #   3. publica no GHCR com a tag do SHA do commit (e `latest` na main);
-#   4. sobe um kind efemero, aplica todos os manifests e roda o scripts/verify.sh
-#      como smoke test — o mesmo que um dev roda na maquina.
+#   4. sobe um kind efemero, aplica todos os manifests (incluindo Prometheus e
+#      Grafana) e roda o scripts/verify.sh como smoke test — o mesmo que um dev
+#      roda na maquina. O smoke test falha se alguma checagem for pulada.
 #
 # Segredo necessario:
 #   SERVICES_READ_TOKEN — PAT fine-grained (ou token de GitHub App) com leitura
@@ -136,20 +137,39 @@ jobs:
         working-directory: infra
         run: ./scripts/deploy-apps.sh
 
+      - name: Deploy da observabilidade (Prometheus + Grafana)
+        working-directory: infra
+        # Precisa do Secret infra-credentials (senha do Grafana), criado no
+        # deploy da infra. Sem este passo o verify.sh pula as checagens do PLT-7.
+        run: ./scripts/deploy-observability.sh
+
       - name: Deploy do Ingress
         working-directory: infra
         run: ./scripts/deploy-ingress.sh
 
       - name: Smoke test (scripts/verify.sh)
         working-directory: infra
-        run: ./scripts/verify.sh
+        run: |
+          set -o pipefail
+          ./scripts/verify.sh | tee verify.log
+          # verde com checagem pulada nao vale: o CD sobe tudo, entao nada pode
+          # ser PULADO. Protege contra um passo de deploy removido por engano.
+          if sed 's/\x1b\[[0-9;]*m//g' verify.log | grep -q 'PULADO'; then
+            echo "::error::verify.sh pulou checagens — algum componente nao foi aplicado"
+            grep 'PULADO' verify.log
+            exit 1
+          fi
+          {
+            echo "### Smoke test"
+            echo "$(sed 's/\x1b\[[0-9;]*m//g' verify.log | grep -c 'OK  -') checagens OK, nenhuma pulada."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Diagnostico em caso de falha
         if: failure()
         run: |
           kubectl get pods -A -o wide || true
           kubectl -n fiapx get events --sort-by=.lastTimestamp | tail -40 || true
-          for d in auth-service video-service video-processor; do
+          for d in auth-service video-service video-processor prometheus grafana; do
             echo "::group::logs $d"
             kubectl -n fiapx logs deploy/$d --tail=80 || true
             echo "::endgroup::"

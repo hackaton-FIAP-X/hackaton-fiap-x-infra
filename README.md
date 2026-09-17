@@ -212,10 +212,16 @@ perde na entrada. A prova completa ("processados = enviados") precisa do worker.
 `.github/workflows/cd.yml`, a cada merge na `main` do infra (ou disparado por um
 serviço via `repository_dispatch`): checkout dos 4 repos lado a lado → build das
 3 imagens → push no GHCR com a tag do SHA (e `latest`) → kind efêmero → deploy
-de tudo → `scripts/verify.sh` como smoke test.
+de tudo, incluindo Prometheus e Grafana → `scripts/verify.sh` como smoke test.
 
-Precisa do segredo **`SERVICES_READ_TOKEN`** no repo infra (leitura dos repos dos
-serviços), a menos que eles sejam públicos.
+O smoke test **falha se alguma checagem for pulada**: como o CD sobe tudo, um
+`PULADO` só aparece se algum passo de deploy sumir do workflow.
+
+Para rodar numa branch sem publicar imagens: *Actions → CD → Run workflow*,
+desmarcando "Publicar as imagens no GHCR".
+
+Os repos dos serviços são públicos, então o checkout não precisa de token. Se
+algum ficar privado, cadastre o segredo **`SERVICES_READ_TOKEN`** no repo infra.
 
 ## CI (PLT-5)
 
