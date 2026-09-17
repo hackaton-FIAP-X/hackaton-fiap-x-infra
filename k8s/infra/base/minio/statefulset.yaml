@@ -24,7 +24,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+          image: quay.io/minio/minio:RELEASE.2024-10-13T13-34-11Z
           args: ["server", "/data", "--console-address", ":9001"]
           ports:
             - name: api

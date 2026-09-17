@@ -14,7 +14,11 @@ WORKSPACE_DIR="$(cd "${INFRA_DIR}/.." && pwd)"
 # Serviço  ->  contexto de build (diretório do repo)  ->  imagem
 # shellcheck disable=SC2034  # consumida pelos scripts que dão source neste arquivo
 SERVICES=(auth-service video-service video-processor)
-image_for() { echo "ghcr.io/hackaton-fiap-x/$1:local"; }
+# Registry e tag sobrescreviveis (o CD usa o SHA do commit). O overlay local
+# referencia :local, entao o default precisa continuar sendo esse.
+IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io/hackaton-fiap-x}"
+IMAGE_TAG="${IMAGE_TAG:-local}"
+image_for() { echo "${IMAGE_REGISTRY}/$1:${IMAGE_TAG}"; }
 
 log()  { printf '\033[1;34m[infra]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[infra] AVISO:\033[0m %s\n' "$*"; }

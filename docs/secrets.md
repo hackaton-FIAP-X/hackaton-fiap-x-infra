@@ -29,9 +29,14 @@ git -C infra status --porcelain | grep -E '\.env$' || echo "ok: nenhum .env rast
 | Secret | Consumido por | Chaves |
 |---|---|---|
 | `infra-credentials` | Postgres, RabbitMQ, MinIO, Redis, Grafana | `POSTGRES_USER/PASSWORD`, `RABBITMQ_DEFAULT_USER/PASS`, `MINIO_ROOT_USER/PASSWORD`, `REDIS_PASSWORD`, `GRAFANA_ADMIN_PASSWORD` |
-| `app-credentials` | os 3 serviços (`envFrom`) | `DB_USER/PASSWORD`, `RABBITMQ_USER/PASSWORD`, `STORAGE_ACCESS_KEY/SECRET_KEY`, `SPRING_DATA_REDIS_PASSWORD`, `PASSWORD_PEPPER`, `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` |
+| `app-credentials` | os 3 serviços (`envFrom`) | `DB_USER/PASSWORD`, `RABBITMQ_USER/PASSWORD/PASS`, `STORAGE_ACCESS_KEY/SECRET_KEY`, `SPRING_DATA_REDIS_PASSWORD`, `PASSWORD_PEPPER`, `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` |
 
 > Os dois `.env` saem do mesmo arquivo, então os valores de app **casam** com os da infra.
+> Use `./scripts/gen-env.sh` (ou `make env`): ele gera senhas aleatórias já
+> consistentes entre os pares (`POSTGRES_PASSWORD` = `DB_PASSWORD`, etc.).
+>
+> O `app-credentials` é gerado com hash no nome (`app-credentials-<hash>`): mudar
+> um segredo e rodar `deploy-apps.sh` faz os pods rolarem sozinhos.
 > Chaves a mais num Secret são apenas variáveis de ambiente não usadas — inofensivas.
 
 ### Chaves JWT do auth-service

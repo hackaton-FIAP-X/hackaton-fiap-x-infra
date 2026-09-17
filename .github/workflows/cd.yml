@@ -1,0 +1,156 @@
+name: CD
+
+# PLT-6 — entrega continua.
+#
+# Polyrepo: o infra orquestra. A cada merge na main (do infra, ou disparado por
+# um servico via repository_dispatch), este workflow:
+#   1. faz checkout do infra e dos 3 servicos lado a lado, como no workspace local;
+#   2. constroi as 3 imagens com os mesmos scripts do `make up`;
+#   3. publica no GHCR com a tag do SHA do commit (e `latest` na main);
+#   4. sobe um kind efemero, aplica todos os manifests e roda o scripts/verify.sh
+#      como smoke test — o mesmo que um dev roda na maquina.
+#
+# Segredo necessario:
+#   SERVICES_READ_TOKEN — PAT fine-grained (ou token de GitHub App) com leitura
+#   de contents nos repos dos servicos. O GITHUB_TOKEN so enxerga o proprio infra.
+#   Se os repos forem publicos, o workflow cai no GITHUB_TOKEN.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      push_images:
+        description: Publicar as imagens no GHCR
+        type: boolean
+        default: true
+  # um servico pode disparar o CD apos o merge dele:
+  #   gh api repos/hackaton-FIAP-X/hackaton-fiap-x-infra/dispatches -f event_type=service-updated
+  repository_dispatch:
+    types: [service-updated]
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  ORG: hackaton-FIAP-X
+  IMAGE_REGISTRY: ghcr.io/hackaton-fiap-x
+
+jobs:
+  deliver:
+    name: build, publish e deploy em kind efemero
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout infra
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - name: Checkout auth-service
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-auth-service
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: auth-service
+
+      - name: Checkout video-service
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-video-service
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: video-service
+
+      - name: Checkout video-processor
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-video-processor
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: video-processor
+
+      - name: SHAs de cada repositorio
+        id: sha
+        run: |
+          short() { git -C "$1" rev-parse --short=12 HEAD; }
+          echo "infra=$(short infra)" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Commits entregues"
+            for r in infra auth-service video-service video-processor; do
+              echo "- \`$r\`: \`$(short $r)\` $(git -C $r log -1 --format=%s)"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Instala kind
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+          version: v0.24.0
+
+      - name: Gera .env efemero (segredos aleatorios, nunca versionados)
+        working-directory: infra
+        run: ./scripts/gen-env.sh
+
+      - name: Build das imagens
+        working-directory: infra
+        run: ./scripts/build-images.sh
+
+      - name: Login no GHCR
+        if: github.event_name != 'workflow_dispatch' || inputs.push_images
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publica no GHCR (tag = SHA do commit do infra)
+        if: github.event_name != 'workflow_dispatch' || inputs.push_images
+        working-directory: infra
+        run: |
+          tags=("${{ steps.sha.outputs.infra }}")
+          [[ "${GITHUB_REF}" == "refs/heads/main" ]] && tags+=(latest)
+          ./scripts/push-images.sh "${tags[@]}"
+          echo "Imagens publicadas com as tags: ${tags[*]}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sobe kind efemero
+        working-directory: infra
+        run: ./scripts/kind-up.sh
+
+      - name: Add-ons (Ingress NGINX + metrics-server)
+        working-directory: infra
+        run: ./scripts/deploy-addons.sh
+
+      - name: Carrega as imagens no kind
+        working-directory: infra
+        run: ./scripts/load-images.sh
+
+      - name: Deploy da infra de apoio
+        working-directory: infra
+        run: ./scripts/deploy-infra.sh
+
+      - name: Deploy dos servicos
+        working-directory: infra
+        run: ./scripts/deploy-apps.sh
+
+      - name: Deploy do Ingress
+        working-directory: infra
+        run: ./scripts/deploy-ingress.sh
+
+      - name: Smoke test (scripts/verify.sh)
+        working-directory: infra
+        run: ./scripts/verify.sh
+
+      - name: Diagnostico em caso de falha
+        if: failure()
+        run: |
+          kubectl get pods -A -o wide || true
+          kubectl -n fiapx get events --sort-by=.lastTimestamp | tail -40 || true
+          for d in auth-service video-service video-processor; do
+            echo "::group::logs $d"
+            kubectl -n fiapx logs deploy/$d --tail=80 || true
+            echo "::endgroup::"
+          done

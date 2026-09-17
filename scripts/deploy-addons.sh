@@ -31,5 +31,5 @@ log "aguardando o metrics-server..."
 kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
 
 log "add-ons prontos."
-log "  Ingress:        http://localhost/auth  e  http://localhost/videos"
+log "  Ingress:        http://localhost/auth/*  e  http://localhost/videos"
 log "  metrics-server: kubectl top pods -n ${NAMESPACE}"

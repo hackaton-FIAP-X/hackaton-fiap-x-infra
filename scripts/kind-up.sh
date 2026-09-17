@@ -13,5 +13,7 @@ else
 fi
 
 kubectl cluster-info --context "kind-${CLUSTER}"
+log "aguardando os nos ficarem Ready..."
+kubectl wait --for=condition=Ready nodes --all --timeout=180s
 kubectl get nodes
 log "pronto. Contexto kubectl: kind-${CLUSTER}"

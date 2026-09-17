@@ -17,7 +17,9 @@ secretGenerator:
       - .env
 
 generatorOptions:
-  disableNameSuffixHash: true
+  # Hash no nome (app-credentials-<hash>): o Kustomize reescreve o secretRef dos
+  # Deployments, entao mudar um segredo no .env faz os pods rolarem sozinhos no
+  # proximo deploy. Com nome fixo o Deployment nao percebe a mudanca.
   labels:
     app.kubernetes.io/part-of: fiapx
 

@@ -27,8 +27,9 @@ check "todos os PVC Bound" \
   "! kubectl -n ${NAMESPACE} get pvc -o jsonpath='{.items[*].status.phase}' | tr ' ' '\n' | grep -qv Bound"
 
 log "== PLT-2: buckets MinIO =="
-check "job minio-createbuckets concluído" \
-  "[ \"\$(kubectl -n ${NAMESPACE} get job minio-createbuckets -o jsonpath='{.status.succeeded}')\" = 1 ]"
+# checa o bucket, nao o Job: o Job e apagado pelo ttlSecondsAfterFinished
+check "bucket fiapx existe no MinIO" \
+  "kubectl -n ${NAMESPACE} exec minio-0 -- test -d /data/fiapx"
 
 log "== PLT-2: DNS interno do cluster =="
 POD="$(kubectl -n "${NAMESPACE}" get pod -l app.kubernetes.io/name=video-service -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
@@ -38,17 +39,6 @@ if [[ -n "${POD}" ]]; then
 else
   warn "PULADO - pod do video-service ainda não existe"
 fi
-
-log "== PLT-2: persistência do Postgres sobrevive a delete de pod =="
-PGUSER="$(kubectl -n "${NAMESPACE}" get secret infra-credentials -o jsonpath='{.data.POSTGRES_USER}' | base64 -d)"
-kubectl -n "${NAMESPACE}" exec statefulset/postgres -- \
-  psql -U "${PGUSER}" -d authdb -c \
-  "CREATE TABLE IF NOT EXISTS plt2_probe(id int); INSERT INTO plt2_probe VALUES (1);" >/dev/null
-kubectl -n "${NAMESPACE}" delete pod postgres-0 >/dev/null
-kubectl -n "${NAMESPACE}" rollout status statefulset/postgres --timeout=180s >/dev/null
-COUNT="$(kubectl -n "${NAMESPACE}" exec statefulset/postgres -- \
-  psql -U "${PGUSER}" -d authdb -tAc "SELECT count(*) FROM plt2_probe;" | tr -d '[:space:]')"
-check "linha ainda presente após delete do pod (count=${COUNT})" "[ \"${COUNT}\" = 1 ]"
 
 log "== PLT-1: serviços Running + health UP + sem restart =="
 for svc in "${SERVICES[@]}"; do
@@ -82,8 +72,10 @@ fi
 if kubectl -n "${NAMESPACE}" get ingress fiapx >/dev/null 2>&1; then
   check "Ingress roteia /auth e /videos" \
     "kubectl -n ${NAMESPACE} get ingress fiapx -o jsonpath='{.spec.rules[*].http.paths[*].path}' | grep -q '/auth' && kubectl -n ${NAMESPACE} get ingress fiapx -o jsonpath='{.spec.rules[*].http.paths[*].path}' | grep -q '/videos'"
-  check "Ingress responde em http://localhost/auth/actuator/health" \
-    "curl -sf --max-time 10 http://localhost/auth/actuator/health | grep -q '\"status\":\"UP\"'"
+  # /auth e repassado sem reescrever o prefixo, entao o actuator nao fica em
+  # /auth/actuator; a JWKS publica e a rota mais barata para provar o roteamento.
+  check "Ingress roteia ate o auth-service (GET /.well-known/jwks.json -> 200)" \
+    "[ \"\$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://localhost/.well-known/jwks.json)\" = 200 ]"
 else
   warn "PULADO - Ingress não aplicado (rode ./scripts/deploy-ingress.sh)"
 fi
@@ -155,5 +147,27 @@ if kubectl -n "${NAMESPACE}" get deploy prometheus >/dev/null 2>&1; then
 else
   warn "PULADO - observabilidade não aplicada (rode ./scripts/deploy-observability.sh)"
 fi
+
+log "== PLT-2: persistência do Postgres sobrevive a delete de pod =="
+# marcador unico: o teste roda varias vezes sobre o mesmo volume
+MARK="$(date +%s)${RANDOM}"
+PGUSER="$(kubectl -n "${NAMESPACE}" get secret infra-credentials -o jsonpath='{.data.POSTGRES_USER}' | base64 -d)"
+kubectl -n "${NAMESPACE}" exec statefulset/postgres -- \
+  psql -U "${PGUSER}" -d postgres -c \
+  "CREATE TABLE IF NOT EXISTS plt2_probe(id bigint); INSERT INTO plt2_probe VALUES (${MARK});" >/dev/null 2>&1
+kubectl -n "${NAMESPACE}" delete pod postgres-0 >/dev/null
+kubectl -n "${NAMESPACE}" rollout status statefulset/postgres --timeout=180s >/dev/null
+COUNT="$(kubectl -n "${NAMESPACE}" exec statefulset/postgres -- \
+  psql -U "${PGUSER}" -d postgres -tAc "SELECT count(*) FROM plt2_probe WHERE id = ${MARK};" | tr -d '[:space:]')"
+check "linha ainda presente após delete do pod (count=${COUNT})" "[ \"${COUNT}\" = 1 ]"
+
+# Por ultimo porque e destrutivo: com o Postgres fora por alguns segundos, o
+# readiness dos servicos (que inclui o banco) cai e o Ingress responde 503.
+# Esperamos todos voltarem para nao deixar o cluster degradado.
+for svc in "${SERVICES[@]}"; do
+  kubectl -n "${NAMESPACE}" rollout status "deployment/${svc}" --timeout=180s >/dev/null || true
+done
+check "servicos voltaram a ficar prontos depois do Postgres reiniciar" \
+  "for s in ${SERVICES[*]}; do [ \"\$(kubectl -n ${NAMESPACE} get deploy \$s -o jsonpath='{.status.readyReplicas}')\" = \"\$(kubectl -n ${NAMESPACE} get deploy \$s -o jsonpath='{.spec.replicas}')\" ] || exit 1; done"
 
 if [[ ${fail} -eq 0 ]]; then log "TUDO OK ✅"; else die "algumas checagens falharam ❌"; fi
