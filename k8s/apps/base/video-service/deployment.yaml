@@ -22,6 +22,12 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # UID/GID numericos sao obrigatorios: as imagens declaram USER por nome
+        # (spring, fiapx) e com runAsNonRoot o kubelet recusa o pod quando nao
+        # consegue provar que o usuario nao e root. Os arquivos da aplicacao sao
+        # legiveis por todos (644) e a JVM so escreve em /tmp.
+        runAsUser: 10001
+        runAsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       containers:
@@ -35,21 +41,23 @@ spec:
                 name: video-service-config
             - secretRef:
                 name: app-credentials
+          # VID-10/VID-11 habilitaram management.endpoint.health.probes:
+          # readiness inclui `db`, entao o pod so entra no Service com o banco de pe.
           startupProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
-            periodSeconds: 10
-            failureThreshold: 60
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: http
             periodSeconds: 20
             failureThreshold: 3

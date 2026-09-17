@@ -40,7 +40,9 @@ ensure_env() {
     cp "${source_file}" "${env_file}"
     log "gerado ${env_file} a partir de $(basename "${source_file}")"
   fi
-  if grep -q 'CHANGE_ME' "${env_file}"; then
-    die "Preencha os valores CHANGE_ME em ${INFRA_DIR}/.env (copie de .env.example) e rode de novo."
+  # So valores (CHAVE=CHANGE_ME...); o cabecalho comentado do template tambem
+  # cita CHANGE_ME e nao pode contar.
+  if grep -qE '^[A-Za-z_][A-Za-z0-9_]*=CHANGE_ME' "${env_file}"; then
+    die "Ha valores CHANGE_ME em ${INFRA_DIR}/.env. Preencha as senhas e gere as chaves JWT com ./scripts/gen-jwt-keys.sh."
   fi
 }
