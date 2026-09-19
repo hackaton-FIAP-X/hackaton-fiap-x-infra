@@ -78,3 +78,25 @@ output "vpc_id" {
   description = "Usado pelo aws-down.sh para esperar os load balancers sairem"
   value       = aws_vpc.main.id
 }
+
+output "password_pepper" {
+  value     = random_password.pepper.result
+  sensitive = true
+}
+
+output "jwt_private_key" {
+  description = "Base64 de DER PKCS8, formato do JwtKeyConfig"
+  value       = local.jwt_private_key
+  sensitive   = true
+}
+
+output "jwt_public_key" {
+  description = "Base64 de DER X509, formato do JwtKeyConfig"
+  value       = local.jwt_public_key
+  sensitive   = true
+}
+
+output "grafana_admin_password" {
+  value     = random_password.grafana.result
+  sensitive = true
+}

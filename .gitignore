@@ -16,4 +16,3 @@ k8s/**/overlays/aws/generated/
 .terraform/
 *.tfstate
 *.tfstate.*
-terraform/aws/backend.hcl

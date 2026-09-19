@@ -1,0 +1,108 @@
+name: AWS - ambiente
+
+# Liga e desliga o ambiente na AWS (Learner Lab) — o "botao" do deploy.
+#   up:   terraform apply (VPC, EKS, RDS, Amazon MQ, ElastiCache, S3, ECR),
+#         build e push das imagens no ECR, deploy no EKS e verify.sh.
+#         Tambem serve para forcar um redeploy com o ambiente ja no ar.
+#   down: remove o NLB do Ingress e roda terraform destroy. Sempre rode depois
+#         da demo: o ambiente consome o credito do lab enquanto existir.
+#
+# Com o ambiente no ar, cada merge na main do infra atualiza tudo sozinho (CD).
+#
+# Secrets do repo infra: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e
+# AWS_SESSION_TOKEN, copiados de AWS Details -> AWS CLI no Learner Lab. Eles
+# expiram a cada sessao do lab: atualize antes de rodar.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: up cria ou atualiza o ambiente; down destroi tudo
+        type: choice
+        options: [up, down]
+        default: up
+
+# mesmo grupo do CD: um deploy automatico nunca roda junto com up/down
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  ORG: hackaton-FIAP-X
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+  AWS_DEFAULT_REGION: us-east-1
+
+jobs:
+  environment:
+    name: ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Confere as credenciais
+        run: |
+          if [ -z "${AWS_ACCESS_KEY_ID}" ]; then
+            echo "::error::cadastre AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_SESSION_TOKEN nos secrets do repo infra"
+            exit 1
+          fi
+          aws sts get-caller-identity --query Arn --output text \
+            || { echo "::error::credenciais invalidas ou expiradas: copie as da sessao atual do Learner Lab"; exit 1; }
+
+      - name: Checkout infra
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - name: Checkout auth-service
+        if: inputs.action == 'up'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-auth-service
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: auth-service
+
+      - name: Checkout video-service
+        if: inputs.action == 'up'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-video-service
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: video-service
+
+      - name: Checkout video-processor
+        if: inputs.action == 'up'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ORG }}/hackaton-fiap-x-video-processor
+          token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
+          path: video-processor
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+          terraform_wrapper: false
+
+      - name: up — cria/atualiza o ambiente e faz o deploy
+        if: inputs.action == 'up'
+        working-directory: infra
+        run: IMAGE_TAG="$(git rev-parse --short=12 HEAD)-${{ github.run_number }}" ./scripts/aws-up.sh
+
+      - name: down — destroi o ambiente
+        if: inputs.action == 'down'
+        working-directory: infra
+        run: ./scripts/aws-down.sh
+
+      - name: Diagnostico em caso de falha
+        if: failure() && inputs.action == 'up'
+        run: |
+          kubectl get pods -A -o wide || true
+          kubectl -n fiapx get events --sort-by=.lastTimestamp | tail -40 || true
+          for d in auth-service video-service video-processor; do
+            echo "::group::logs $d"
+            kubectl -n fiapx logs deploy/$d --tail=80 || true
+            echo "::endgroup::"
+          done
