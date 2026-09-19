@@ -1,0 +1,38 @@
+# O RDS nasce so com o database authdb (terraform/aws/data.tf). Este Job cria o
+# videodb do video-service. Idempotente: reaplicar nao faz nada se ele existe.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-videodb
+  labels:
+    app.kubernetes.io/part-of: fiapx
+spec:
+  backoffLimit: 10
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      containers:
+        - name: psql
+          image: postgres:16
+          envFrom:
+            - configMapRef:
+                name: video-service-config # DB_HOST, DB_PORT
+            - secretRef:
+                name: app-credentials # DB_USER, DB_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              export PGPASSWORD="$DB_PASSWORD" PGSSLMODE=require
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d authdb; do sleep 3; done
+              if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d authdb -tAc \
+                   "SELECT 1 FROM pg_database WHERE datname = 'videodb'" | grep -q 1; then
+                echo "videodb ja existe"
+              else
+                psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d authdb -c "CREATE DATABASE videodb"
+              fi

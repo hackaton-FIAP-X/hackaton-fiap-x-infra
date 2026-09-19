@@ -1,0 +1,4 @@
+# Copie para backend.hcl (git-ignored) com o bucket criado por terraform/bootstrap:
+#   terraform init -backend-config=backend.hcl
+bucket = "fiapx-tfstate-<conta>-<sufixo>"
+region = "us-east-1"

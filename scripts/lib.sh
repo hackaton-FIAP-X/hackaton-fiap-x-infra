@@ -16,7 +16,9 @@ WORKSPACE_DIR="$(cd "${INFRA_DIR}/.." && pwd)"
 SERVICES=(auth-service video-service video-processor)
 # Registry e tag sobrescreviveis (o CD usa o SHA do commit). O overlay local
 # referencia :local, entao o default precisa continuar sendo esse.
-IMAGE_REGISTRY="${IMAGE_REGISTRY:-ghcr.io/hackaton-fiap-x}"
+# Nome das imagens que build-images.sh produz localmente (e que o kind usa).
+LOCAL_IMAGE_REGISTRY="ghcr.io/hackaton-fiap-x"
+IMAGE_REGISTRY="${IMAGE_REGISTRY:-${LOCAL_IMAGE_REGISTRY}}"
 IMAGE_TAG="${IMAGE_TAG:-local}"
 image_for() { echo "${IMAGE_REGISTRY}/$1:${IMAGE_TAG}"; }
 
