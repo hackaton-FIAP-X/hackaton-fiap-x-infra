@@ -3,7 +3,7 @@
 # Terraform (o NLB do Ingress): se ele ficar, a VPC nao consegue ser apagada e o
 # destroy trava ate o timeout.
 #
-# Uso: ./scripts/aws-down.sh           # destroi o ambiente (o bucket do estado fica)
+# Uso: ./scripts/aws-down.sh           # destroi o ambiente e o bucket da aplicacao (o do estado fica)
 #      ALL=1 ./scripts/aws-down.sh     # tambem apaga o bucket do estado
 set -euo pipefail
 # shellcheck source=./aws-lib.sh
@@ -18,9 +18,16 @@ if ! aws s3api head-bucket --bucket "${BUCKET}" >/dev/null 2>&1; then
   exit 0
 fi
 tf_init
+migrate_legacy_state
 
 if cluster_exists; then
   aws eks update-kubeconfig --name "${CLUSTER_NAME}" >/dev/null
+  # O volume EBS do RabbitMQ foi criado pelo driver CSI, fora do Terraform: apaga
+  # o PVC enquanto o driver ainda existe, senao o disco fica orfao (e cobrando).
+  log "removendo o RabbitMQ e o volume EBS dele"
+  kubectl -n "${NAMESPACE}" delete statefulset rabbitmq --ignore-not-found --wait=true --timeout=120s || true
+  kubectl -n "${NAMESPACE}" delete pvc --all --wait=true --timeout=180s || true
+  kubectl wait --for=delete pv --all --timeout=180s >/dev/null 2>&1 || true
   log "removendo o Ingress NGINX (e o NLB que ele criou)"
   kubectl delete namespace ingress-nginx --ignore-not-found --wait=true --timeout=300s || true
   VPC_ID="$(tf_out vpc_id 2>/dev/null || true)"
@@ -35,6 +42,7 @@ fi
 
 log "terraform destroy"
 terraform -chdir="${TF_DIR}" destroy -input=false -auto-approve -var "region=${AWS_DEFAULT_REGION}"
+delete_app_bucket
 
 if [[ "${ALL:-0}" == "1" ]]; then
   log "apagando o bucket do estado ${BUCKET} (todas as versoes)"

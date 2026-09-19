@@ -17,10 +17,6 @@ output "ecr_repositories" {
   value = { for k, r in aws_ecr_repository.service : k => r.repository_url }
 }
 
-output "bucket" {
-  value = aws_s3_bucket.app.bucket
-}
-
 output "db_host" {
   value = aws_db_instance.postgres.address
 }
@@ -38,24 +34,8 @@ output "db_password" {
   sensitive = true
 }
 
-locals {
-  # Na AWS: amqps://b-xxxx.mq.us-east-1.amazonaws.com:5671 (sempre TLS)
-  mq_endpoint = regex("^(?P<scheme>[a-z]+)://(?P<host>[^:/]+)(?::(?P<port>[0-9]+))?", aws_mq_broker.rabbitmq.instances[0].endpoints[0])
-}
-
-output "mq_host" {
-  value = local.mq_endpoint.host
-}
-
-output "mq_port" {
-  value = coalesce(local.mq_endpoint.port, "5671")
-}
-
-output "mq_tls" {
-  description = "true quando o broker exige AMQPS (sempre, no Amazon MQ real)"
-  value       = local.mq_endpoint.scheme == "amqps"
-}
-
+# RabbitMQ no cluster (StatefulSet): so as credenciais saem daqui; o host e o
+# Service rabbitmq.fiapx.svc.cluster.local:5672, sem TLS (trafego interno).
 output "mq_user" {
   value = "fiapx"
 }

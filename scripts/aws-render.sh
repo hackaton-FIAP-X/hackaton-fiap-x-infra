@@ -3,7 +3,8 @@
 # terraform/aws: endpoints no ConfigMap, senhas no Secret, imagens do ECR.
 #
 # Tudo vai para k8s/*/overlays/aws/generated/ (git-ignored: tem senhas).
-# Uso: IMAGE_TAG=<tag> ./scripts/aws-render.sh
+# Uso: APP_BUCKET=<bucket> IMAGE_TAG=<tag> ./scripts/aws-render.sh
+# (o bucket e criado pela CLI em aws-lib.sh, nao pelo Terraform: ver ensure_app_bucket)
 set -euo pipefail
 # shellcheck source=./lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -18,15 +19,15 @@ mkdir -p "${APPS_GEN}" "${INFRA_GEN}"
 OUT="$(terraform -chdir="${TF_DIR}" output -json)"
 
 IMAGE_TAG="${IMAGE_TAG:?informe IMAGE_TAG (a tag publicada no ECR)}" \
+APP_BUCKET="${APP_BUCKET:?informe APP_BUCKET (bucket S3 da aplicacao)}" \
 APPS_GEN="${APPS_GEN}" INFRA_GEN="${INFRA_GEN}" INFRA_DIR="${INFRA_DIR}" \
 python3 - "${OUT}" <<'PY'
 import json, os, sys
 
 out = {k: v["value"] for k, v in json.loads(sys.argv[1]).items()}
 apps, infra, tag = os.environ["APPS_GEN"], os.environ["INFRA_GEN"], os.environ["IMAGE_TAG"]
-region = out["region"]
+region, bucket = out["region"], os.environ["APP_BUCKET"]
 s3_endpoint = f"https://s3.{region}.amazonaws.com"
-tls = "true" if out.get("mq_tls", True) else "false"
 
 def write(path, text, mode=0o600):
     with open(path, "w") as f:
@@ -38,20 +39,18 @@ def configmap(name, data):
     return f"apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: {name}\ndata:\n{lines}"
 
 db = {"DB_HOST": out["db_host"], "DB_PORT": out["db_port"]}
-mq = {"RABBITMQ_HOST": out["mq_host"], "RABBITMQ_PORT": out["mq_port"],
-      # AMQPS no Amazon MQ. A env do Spring vale para os dois servicos, mesmo o
-      # video-service nao declarando ssl no application.yml dele.
-      "SPRING_RABBITMQ_SSL_ENABLED": tls, "RABBITMQ_SSL_ENABLED": tls}
+# RabbitMQ roda no cluster (k8s/infra/overlays/aws): host e porta ja sao os da
+# base (rabbitmq.fiapx.svc.cluster.local:5672, sem TLS), nada a sobrescrever.
 redis = {"REDIS_HOST": out["redis_host"], "REDIS_PORT": "6379"}
 
 write(f"{apps}/auth-service.yaml", configmap("auth-service-config", {**db, **redis}))
 write(f"{apps}/video-service.yaml", configmap("video-service-config", {
-    **db, **mq, **redis,
-    "STORAGE_BUCKET": out["bucket"], "STORAGE_REGION": region,
+    **db, **redis,
+    "STORAGE_BUCKET": bucket, "STORAGE_REGION": region,
     # o video-service exige endpoint; o regional do S3 atende path-style
     "STORAGE_ENDPOINT": s3_endpoint, "STORAGE_PUBLIC_ENDPOINT": s3_endpoint}))
 write(f"{apps}/video-processor.yaml", configmap("video-processor-config", {
-    **mq, "STORAGE_BUCKET": out["bucket"], "STORAGE_REGION": region,
+    "STORAGE_BUCKET": bucket, "STORAGE_REGION": region,
     # vazio = S3 padrao da regiao; credenciais pelo LabRole do no
     "STORAGE_ENDPOINT": ""}))
 
@@ -87,6 +86,11 @@ app_env = {
     "JWT_PUBLIC_KEY": out["jwt_public_key"],
 }
 write(f"{apps}/app.env", "".join(f"{k}={v}\n" for k, v in app_env.items()))
-write(f"{infra}/infra.env", f"GRAFANA_ADMIN_PASSWORD={out['grafana_admin_password']}\n")
-print(f"overlays aws gerados (imagens :{tag}, bucket {out['bucket']})")
+infra_env = {
+    "GRAFANA_ADMIN_PASSWORD": out["grafana_admin_password"],
+    # mesmo usuario/senha que os apps recebem acima (RABBITMQ_USER/PASSWORD)
+    "RABBITMQ_DEFAULT_USER": out["mq_user"], "RABBITMQ_DEFAULT_PASS": out["mq_password"],
+}
+write(f"{infra}/infra.env", "".join(f"{k}={v}\n" for k, v in infra_env.items()))
+print(f"overlays aws gerados (imagens :{tag}, bucket {bucket})")
 PY

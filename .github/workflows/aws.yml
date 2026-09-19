@@ -1,7 +1,7 @@
 name: AWS - ambiente
 
 # Liga e desliga o ambiente na AWS (Learner Lab) — o "botao" do deploy.
-#   up:   terraform apply (VPC, EKS, RDS, Amazon MQ, ElastiCache, S3, ECR),
+#   up:   terraform apply (VPC, EKS, RDS, ElastiCache, ECR) + bucket S3 pela CLI,
 #         build e push das imagens no ECR, deploy no EKS e verify.sh.
 #         Tambem serve para forcar um redeploy com o ambiente ja no ar.
 #   down: remove o NLB do Ingress e roda terraform destroy. Sempre rode depois

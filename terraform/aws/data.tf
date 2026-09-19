@@ -1,9 +1,12 @@
-# Servicos gerenciados: RDS Postgres, Amazon MQ (RabbitMQ) e ElastiCache Redis.
-# Todos em subnets privadas, acessiveis so a partir dos nos do EKS.
+# Servicos gerenciados: RDS Postgres e ElastiCache Redis, em subnets privadas e
+# acessiveis so a partir dos nos do EKS.
+#
+# RabbitMQ roda DENTRO do EKS (StatefulSet com volume EBS, k8s/infra/overlays/aws):
+# o Learner Lab nega mq:CreateBroker, entao o Amazon MQ nao e opcao (ADR-002).
 
 resource "aws_security_group" "data" {
   name        = "${var.project}-data"
-  description = "Postgres, RabbitMQ (AMQPS) e Redis, liberados so para o EKS"
+  description = "Postgres e Redis, liberados so para o EKS"
   vpc_id      = aws_vpc.main.id
   tags        = { Name = "${var.project}-data" }
 }
@@ -11,7 +14,6 @@ resource "aws_security_group" "data" {
 locals {
   data_ports = {
     postgres = 5432
-    amqps    = 5671
     redis    = 6379
   }
 }
@@ -72,29 +74,13 @@ resource "aws_db_instance" "postgres" {
   apply_immediately       = true
 }
 
-# ---------------------------------------------------------- Amazon MQ -------
+# ------------------------------------------------------------ RabbitMQ ------
 
+# Senha do RabbitMQ que roda no cluster. Gerada aqui para ficar no estado junto
+# com as outras (estavel entre deploys, igual para a maquina local e o CD).
 resource "random_password" "mq" {
   length  = 24
-  special = false # Amazon MQ recusa , : = na senha
-}
-
-resource "aws_mq_broker" "rabbitmq" {
-  broker_name                = "${var.project}-rabbitmq"
-  engine_type                = "RabbitMQ"
-  engine_version             = var.mq_engine_version
-  host_instance_type         = var.mq_instance_type
-  deployment_mode            = "SINGLE_INSTANCE"
-  auto_minor_version_upgrade = true
-
-  publicly_accessible = false
-  subnet_ids          = [aws_subnet.private[0].id]
-  security_groups     = [aws_security_group.data.id]
-
-  user {
-    username = "fiapx"
-    password = random_password.mq.result
-  }
+  special = false
 }
 
 # ------------------------------------------------------------- Redis --------

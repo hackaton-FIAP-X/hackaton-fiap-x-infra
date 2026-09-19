@@ -8,8 +8,7 @@ resources:
   - postgres/configmap.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml
-  - rabbitmq/service.yaml
-  - rabbitmq/statefulset.yaml
+  - rabbitmq
   - minio/service.yaml
   - minio/statefulset.yaml
   - minio/job-createbuckets.yaml

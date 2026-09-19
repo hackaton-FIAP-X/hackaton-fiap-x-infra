@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-# Diretorio proprio para o overlay aws usar so o Mailhog (Postgres, RabbitMQ,
-# MinIO e Redis viram servicos gerenciados na AWS).
+# Diretorio proprio para o overlay aws usar o Mailhog sem o resto da base
+# (Postgres, MinIO e Redis viram servicos gerenciados na AWS).
 resources:
   - deployment.yaml
   - service.yaml

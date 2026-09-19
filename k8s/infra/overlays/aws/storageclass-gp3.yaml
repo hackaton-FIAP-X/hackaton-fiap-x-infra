@@ -1,0 +1,15 @@
+# Disco do RabbitMQ no EKS, provisionado pelo addon aws-ebs-csi-driver
+# (terraform/aws/eks.tf). WaitForFirstConsumer cria o volume na AZ do no onde o
+# pod caiu; Delete apaga o EBS junto com o PVC (scripts/aws-down.sh faz isso
+# antes do terraform destroy, para nao sobrar volume orfao cobrando).
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

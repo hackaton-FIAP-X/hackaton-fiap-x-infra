@@ -69,3 +69,17 @@ resource "aws_eks_node_group" "main" {
     max_unavailable = 1
   }
 }
+
+# Driver EBS CSI: provisiona o volume do RabbitMQ (StorageClass gp3 em
+# k8s/infra/overlays/aws). Sem IRSA no Learner Lab (nao da para criar IAM), o
+# controller usa as credenciais do no — o LabRole — pelo IMDS (hop limit 2 acima).
+resource "aws_eks_addon" "ebs_csi" {
+  count                       = var.enable_ebs_csi ? 1 : 0
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "aws-ebs-csi-driver"
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  # o addon so fica ACTIVE com os pods rodando, e os pods precisam de nos
+  depends_on = [aws_eks_node_group.main]
+}

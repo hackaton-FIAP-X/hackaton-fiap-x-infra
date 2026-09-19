@@ -27,7 +27,9 @@ fi
 # ---------------------------------------------------------------- terraform --
 ensure_state_bucket
 tf_init
-log "terraform apply (15-25 min na primeira vez: EKS, RDS e Amazon MQ demoram)"
+migrate_legacy_state
+ensure_app_bucket
+log "terraform apply (15-25 min na primeira vez: EKS e RDS demoram)"
 terraform -chdir="${TF_DIR}" apply -input=false -auto-approve -var "region=${AWS_DEFAULT_REGION}"
 
 ECR="$(tf_out ecr_registry)"
@@ -45,12 +47,15 @@ log "push das imagens para o ECR (tag ${IMAGE_TAG})"
 IMAGE_REGISTRY="${ECR}/fiapx" "${INFRA_DIR}/scripts/push-images.sh" "${IMAGE_TAG}"
 
 # ------------------------------------------------------------------- deploy --
-IMAGE_TAG="${IMAGE_TAG}" "${INFRA_DIR}/scripts/aws-render.sh"
+APP_BUCKET="$(app_bucket)" IMAGE_TAG="${IMAGE_TAG}" "${INFRA_DIR}/scripts/aws-render.sh"
 PROVIDER=aws "${INFRA_DIR}/scripts/deploy-addons.sh"
 
 kubectl apply -f "${INFRA_DIR}/k8s/namespace.yaml"
 kubectl -n "${NAMESPACE}" delete job create-videodb --ignore-not-found >/dev/null
 kubectl apply -k "${INFRA_DIR}/k8s/infra/overlays/aws"
+# os servicos declaram a topologia no RabbitMQ ao subir: ele vem antes
+log "aguardando o RabbitMQ (volume EBS novo leva ~1 min)..."
+kubectl -n "${NAMESPACE}" rollout status statefulset/rabbitmq --timeout=600s
 kubectl apply -k "${INFRA_DIR}/k8s/apps/overlays/aws"
 log "aguardando o videodb no RDS e os servicos..."
 kubectl -n "${NAMESPACE}" wait --for=condition=complete job/create-videodb --timeout=300s
