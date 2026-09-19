@@ -46,17 +46,13 @@ variable "db_instance_class" {
   default = "db.t3.micro"
 }
 
-variable "mq_instance_type" {
-  type    = string
-  default = "mq.t3.micro"
-}
-
-variable "mq_engine_version" {
-  type    = string
-  default = "3.13"
-}
-
 variable "cache_node_type" {
   type    = string
   default = "cache.t3.micro"
+}
+
+variable "enable_ebs_csi" {
+  description = "Instala o addon aws-ebs-csi-driver (volume do RabbitMQ). So o Floci desliga: ele nao emula addons"
+  type        = bool
+  default     = true
 }

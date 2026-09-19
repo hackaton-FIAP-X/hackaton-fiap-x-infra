@@ -76,12 +76,22 @@ que não permite criar IAM — o cluster e os nós usam o `LabRole` que já exis
 | **EKS** 1.31, 2× t3.large (até 4) | `eks.tf` | kind |
 | **ECR** (3 repositórios) | `ecr.tf` | imagens `:local` |
 | **RDS Postgres 16** (`authdb` + `videodb`) | `data.tf` | StatefulSet Postgres |
-| **Amazon MQ — RabbitMQ 3.13** (AMQPS) | `data.tf` | StatefulSet RabbitMQ |
 | **ElastiCache Redis 7** | `data.tf` | StatefulSet Redis |
-| **S3** | `s3.tf` | MinIO |
+| **S3** (bucket criado pela CLI, ver abaixo) | `scripts/aws-lib.sh` | MinIO |
+| Driver **EBS CSI** (volume gp3 do RabbitMQ) | `eks.tf` | disco do kind |
 
-No cluster ficam só os serviços, Ingress NGINX (vira um NLB), metrics-server,
-Prometheus/Grafana e Mailhog.
+No cluster ficam os serviços, o **RabbitMQ** (StatefulSet com volume EBS), Ingress
+NGINX (vira um NLB), metrics-server, Prometheus/Grafana e Mailhog.
+
+**Restrições do Learner Lab** que moldaram isso (ver ADR-002 no repo `docs`):
+
+- **Amazon MQ bloqueado** (`mq:CreateBroker` negado): o RabbitMQ roda no EKS, com
+  os mesmos manifests do kind e volume EBS gp3 para as mensagens sobreviverem a
+  restart do pod.
+- **S3 via Terraform bloqueado:** o `aws_s3_bucket` do provider sempre lê a config
+  de object lock, e o SCP do lab nega `s3:GetBucketObjectLockConfiguration`. O
+  bucket da aplicação (`fiapx-app-<conta>-<região>`) é criado pela CLI, como o do
+  estado, e apagado pelo `aws-down.sh`.
 
 ### Deploy automático pelo GitHub Actions (recomendado)
 
@@ -113,7 +123,7 @@ Prometheus/Grafana e Mailhog.
 ```bash
 export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
 ./scripts/aws-up.sh     # mesmo script que o CD usa
-./scripts/aws-down.sh   # ALL=1 apaga também o bucket do estado
+./scripts/aws-down.sh   # apaga tudo, inclusive o bucket da aplicação; ALL=1 apaga também o do estado
 ```
 
 - **Estado remoto:** bucket `fiapx-tfstate-<conta>-<região>`, de nome fixo e
@@ -125,11 +135,13 @@ export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
   as senhas cadastradas e os tokens emitidos.
 - **Credenciais do S3 nos pods:** nenhuma chave fixa. Os pods usam o `LabRole`
   do nó pela cadeia padrão da AWS (IMDSv2 com hop limit 2 no launch template).
-- **Senhas do RDS e do Amazon MQ:** geradas pelo Terraform e levadas ao Secret
+- **Senhas do RDS e do RabbitMQ:** geradas pelo Terraform e levadas ao Secret
   `app-credentials` por `scripts/aws-render.sh` (`k8s/*/overlays/aws/generated/`,
   git-ignored).
 - **`aws-down.sh`** apaga o NLB do Ingress antes do `terraform destroy`: um load
-  balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC.
+  balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC. Também
+  apaga o PVC do RabbitMQ enquanto o driver EBS ainda existe, para o disco não
+  ficar órfão.
 
 ### Testar o Terraform sem AWS (Floci)
 
@@ -332,7 +344,7 @@ infra/
 ├── docker-compose.yml              # ambiente completo sem Kubernetes (PLT-4)
 ├── kind/kind-config.yaml           # 1 control-plane + 2 workers, portas 80/443
 ├── terraform/
-│   ├── aws/                        # VPC, EKS, ECR, RDS, Amazon MQ, ElastiCache, S3
+│   ├── aws/                        # VPC, EKS (+ EBS CSI), ECR, RDS, ElastiCache
 │   └── floci/                      # override para testar no emulador
 ├── scripts/                        # bash puro, sem dependência de make
 ├── k8s/

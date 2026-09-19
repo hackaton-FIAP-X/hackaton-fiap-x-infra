@@ -1,5 +1,5 @@
 # VPC em 2 AZs: subnets publicas (NAT, NLB do Ingress) e privadas (nos do EKS,
-# RDS, Amazon MQ, ElastiCache). Um unico NAT Gateway: ambiente de demo que sobe
+# RDS, ElastiCache). Um unico NAT Gateway: ambiente de demo que sobe
 # e destroi, entao alta disponibilidade do NAT nao compensa o custo dobrado.
 
 data "aws_availability_zones" "available" {

@@ -80,7 +80,7 @@ jobs:
         run: |
           WORK="$(sed -n 's/.*estado fica em \([^ ]*\) .*/\1/p' apply.log | tail -1)"
           echo "WORK=$WORK" >> "$GITHUB_ENV"
-          TF_DIR="$WORK" IMAGE_TAG=ci ./scripts/aws-render.sh
+          TF_DIR="$WORK" APP_BUCKET=fiapx-app-ci IMAGE_TAG=ci ./scripts/aws-render.sh
           kustomize build k8s/apps/overlays/aws > /tmp/aws-apps.yaml
           kustomize build k8s/infra/overlays/aws > /tmp/aws-infra.yaml
           kubeconform -strict -summary /tmp/aws-apps.yaml /tmp/aws-infra.yaml
