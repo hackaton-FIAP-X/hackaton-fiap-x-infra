@@ -5,14 +5,19 @@ metadata:
   labels:
     app.kubernetes.io/name: video-processor
     app.kubernetes.io/part-of: fiapx
+# Chaves conforme video-processor/src/main/resources/application.yml (WRK-1..WRK-10).
+# Segredos (RABBITMQ_USER/PASS, STORAGE_ACCESS_KEY/SECRET_KEY) vem do app-credentials.
 data:
   SPRING_PROFILES_ACTIVE: "k8s"
-  # application.yml do video-processor lê RABBITMQ_HOST / RABBITMQ_PORT.
+
   RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
   RABBITMQ_PORT: "5672"
-  # Chaves no padrão Spring, para quando a auto-config do amqp for usada.
-  SPRING_RABBITMQ_HOST: "rabbitmq.fiapx.svc.cluster.local"
-  SPRING_RABBITMQ_PORT: "5672"
-  MINIO_ENDPOINT: "http://minio.fiapx.svc.cluster.local:9000"
-  MINIO_BUCKET_VIDEOS: "fiapx-videos"
-  MINIO_BUCKET_OUTPUTS: "fiapx-outputs"
+
+  # Mesmo bucket e prefixos do video-service (fiapx/inputs, fiapx/outputs)
+  STORAGE_ENDPOINT: "http://minio.fiapx.svc.cluster.local:9000"
+  STORAGE_BUCKET: "fiapx"
+  STORAGE_REGION: "us-east-1"
+
+  # Um video por vez por pod: a escala vem do HPA, nao de threads (WRK-1)
+  PROCESSOR_CONCURRENCY: "1"
+  PROCESSOR_WORK_DIR: "/work"

@@ -25,6 +25,15 @@ on:
         description: Publicar as imagens no GHCR
         type: boolean
         default: true
+      auth_ref:
+        description: Branch/tag/SHA do auth-service (valida um PR antes do merge)
+        default: main
+      video_ref:
+        description: Branch/tag/SHA do video-service
+        default: main
+      processor_ref:
+        description: Branch/tag/SHA do video-processor
+        default: main
   # um servico pode disparar o CD apos o merge dele:
   #   gh api repos/hackaton-FIAP-X/hackaton-fiap-x-infra/dispatches -f event_type=service-updated
   repository_dispatch:
@@ -57,6 +66,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.ORG }}/hackaton-fiap-x-auth-service
+          ref: ${{ inputs.auth_ref || 'main' }}
           token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
           path: auth-service
 
@@ -64,6 +74,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.ORG }}/hackaton-fiap-x-video-service
+          ref: ${{ inputs.video_ref || 'main' }}
           token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
           path: video-service
 
@@ -71,6 +82,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.ORG }}/hackaton-fiap-x-video-processor
+          ref: ${{ inputs.processor_ref || 'main' }}
           token: ${{ secrets.SERVICES_READ_TOKEN || github.token }}
           path: video-processor
 

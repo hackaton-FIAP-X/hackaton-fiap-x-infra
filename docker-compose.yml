@@ -155,7 +155,7 @@ services:
 
   video-processor:
     image: ghcr.io/hackaton-fiap-x/video-processor:local
-    ports: ['8082:8082', '5007:5005']
+    ports: ['8082:8082']
     depends_on:
       rabbitmq: {condition: service_healthy}
       minio: {condition: service_healthy}

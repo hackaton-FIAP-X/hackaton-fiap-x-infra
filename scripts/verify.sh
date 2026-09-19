@@ -121,6 +121,55 @@ if curl -s -o /dev/null --max-time 5 "${BASE}/auth/login"; then
   CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "${BASE}/videos")"
   check "video-service sem token -> 401 (recebido ${CODE})" "[ '${CODE}' = 401 ]"
 
+  # ---- E2E-1: upload -> worker -> ZIP (e video corrompido -> FAILED + DLQ) ----
+  log "== E2E: video processado pelo worker =="
+  FIXTURE="${INFRA_DIR}/k6/fixtures/sample-3s.mp4"
+  json_field() { python3 -c "import sys,json; print(json.load(sys.stdin).get('$1',''))" 2>/dev/null; }
+  upload() { # arquivo nome -> videoId
+    curl -s --max-time 30 -X POST "${BASE}/videos" -H "Authorization: Bearer ${TOKEN}" \
+      -F "file=@$1;filename=$2;type=video/mp4" | json_field videoId
+  }
+  await_final() { # videoId -> JSON final (COMPLETED/FAILED) ou vazio no timeout
+    local id="$1" body status deadline=$(( SECONDS + ${E2E_TIMEOUT_S:-180} ))
+    while (( SECONDS < deadline )); do
+      body="$(curl -s --max-time 10 "${BASE}/videos/${id}" -H "Authorization: Bearer ${TOKEN}")"
+      status="$(echo "${body}" | json_field status)"
+      if [[ "${status}" == "COMPLETED" || "${status}" == "FAILED" ]]; then echo "${body}"; return; fi
+      sleep 3
+    done
+  }
+
+  OK_ID="$(upload "${FIXTURE}" e2e-ok.mp4)"
+  BAD_FILE="$(mktemp)"; echo "isto nao e um video" > "${BAD_FILE}"
+  BAD_ID="$(upload "${BAD_FILE}" e2e-corrompido.mp4)"; rm -f "${BAD_FILE}"
+  check "uploads aceitos (videoIds ${OK_ID:-?} / ${BAD_ID:-?})" "[ -n '${OK_ID}' ] && [ -n '${BAD_ID}' ]"
+
+  if [[ -n "${OK_ID}" ]]; then
+    FINAL="$(await_final "${OK_ID}")"
+    check "video valido chega a COMPLETED" "echo '${FINAL}' | grep -q '\"status\":\"COMPLETED\"'"
+    FRAMES="$(echo "${FINAL}" | json_field frameCount)"
+    check "ZIP tem frames (frameCount=${FRAMES:-0})" "[ '${FRAMES:-0}' -ge 1 ] 2>/dev/null"
+    LOCATION="$(curl -s -o /dev/null -w '%{redirect_url}' --max-time 10 "${BASE}/videos/${OK_ID}/zip" \
+      -H "Authorization: Bearer ${TOKEN}")"
+    check "GET /videos/{id}/zip redireciona para a URL pre-assinada do ZIP" \
+      "echo '${LOCATION}' | grep -q '${OK_ID}.zip'"
+    if kubectl -n "${NAMESPACE}" get pod minio-0 >/dev/null 2>&1; then
+      check "ZIP gravado no MinIO" \
+        "kubectl -n ${NAMESPACE} exec minio-0 -- sh -c 'ls -d /data/fiapx/fiapx/outputs/*/${OK_ID}.zip' >/dev/null"
+    fi
+  fi
+
+  if [[ -n "${BAD_ID}" ]]; then
+    FINAL="$(await_final "${BAD_ID}")"
+    check "video corrompido chega a FAILED com INVALID_VIDEO" \
+      "echo '${FINAL}' | grep -q '\"status\":\"FAILED\"' && echo '${FINAL}' | grep -q 'INVALID_VIDEO'"
+    if kubectl -n "${NAMESPACE}" get pod rabbitmq-0 >/dev/null 2>&1; then
+      DLQ="$(kubectl -n "${NAMESPACE}" exec rabbitmq-0 -- rabbitmqctl -q list_queues name messages 2>/dev/null \
+        | awk '$1=="video.processing.dlq" {print $2}')"
+      check "mensagem do video corrompido na DLQ (video.processing.dlq=${DLQ:-0})" "[ '${DLQ:-0}' -ge 1 ] 2>/dev/null"
+    fi
+  fi
+
   # Por ultimo: estoura o balde do IP e bloqueia o login por ate 60s.
   LAST=""
   for _ in $(seq 1 12); do
