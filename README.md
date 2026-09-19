@@ -95,8 +95,15 @@ cada serviço (`DB_*`, `REDIS_*`, `STORAGE_*`…) — não as `SPRING_*` padrão
 
 Pods rodam como não-root com UID/GID numéricos (`10001`): as imagens declaram
 `USER` por nome e, sem UID numérico, o kubelet recusa o pod com `runAsNonRoot`.
-Só o `video-processor` fica como root, porque ainda usa o Dockerfile de dev —
-sai da exceção quando a WRK-9 entregar a imagem dele.
+Os três serviços usam imagem de produção não-root (`Dockerfile.prod` ou o
+multi-stage do video-service).
+
+#### video-processor
+
+Worker com FFmpeg (WRK-1..10): consome `video.processing` com `prefetch=1`,
+gera o ZIP de frames em `fiapx/outputs/{userId}/{videoId}.zip` e publica
+`video.processed`/`video.failed`. Trabalha num `emptyDir` em `/work` (4Gi),
+limpo a cada vídeo. O HPA (2–10 réplicas) escala pela CPU do FFmpeg.
 
 `build-images.sh` usa o `Dockerfile.prod` do serviço quando existe (hoje, o
 auth-service — AUTH-8) e o `Dockerfile` padrão nos demais.
@@ -170,7 +177,9 @@ curl http://localhost/.well-known/jwks.json
 
 `make verify` roda esse fluxo automaticamente (register, 409 no duplicado, login,
 `iss`/`alg` do token, 401 com senha errada, token aceito pelo video-service,
-401 sem token e 429 no rate limit).
+401 sem token e 429 no rate limit) e o **E2E do processamento**: um MP4 real
+chega a `COMPLETED` com o ZIP no storage e o redirect de download, e um arquivo
+corrompido chega a `FAILED` (`INVALID_VIDEO`) com a mensagem na DLQ.
 
 O resto via `make demo`, que abre os port-forwards:
 
@@ -204,8 +213,7 @@ rate limit) e dispara os uploads todos juntos com um MP4 real de 3s
 upload aceito (202) não estiver persistido, ou — com `WAIT=true` — se algum
 vídeo não for processado. Relatórios em `docs/load/`.
 
-Sem o `video-processor`, rode sem `WAIT`: prova que nenhuma requisição aceita se
-perde na entrada. A prova completa ("processados = enviados") precisa do worker.
+`make load WAIT=true` é a prova completa do requisito: processados = enviados.
 
 ## CD (PLT-6)
 
@@ -218,7 +226,8 @@ O smoke test **falha se alguma checagem for pulada**: como o CD sobe tudo, um
 `PULADO` só aparece se algum passo de deploy sumir do workflow.
 
 Para rodar numa branch sem publicar imagens: *Actions → CD → Run workflow*,
-desmarcando "Publicar as imagens no GHCR".
+desmarcando "Publicar as imagens no GHCR". Os campos `auth_ref`, `video_ref` e
+`processor_ref` permitem validar o PR de um serviço no cluster antes do merge.
 
 Os repos dos serviços são públicos, então o checkout não precisa de token. Se
 algum ficar privado, cadastre o segredo **`SERVICES_READ_TOKEN`** no repo infra.

@@ -41,24 +41,29 @@ spec:
                 name: video-processor-config
             - secretRef:
                 name: app-credentials
+          # WRK-8/WRK-10: readiness inclui a conexao com o RabbitMQ
           startupProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
-            periodSeconds: 10
-            failureThreshold: 60
+            periodSeconds: 5
+            failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: http
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: http
             periodSeconds: 20
             failureThreshold: 3
+          volumeMounts:
+            # videos baixados e frames extraidos; apagados ao fim de cada video (WRK-2)
+            - name: work
+              mountPath: /work
           resources:
             requests:
               cpu: 250m
@@ -70,3 +75,7 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+      volumes:
+        - name: work
+          emptyDir:
+            sizeLimit: 4Gi
