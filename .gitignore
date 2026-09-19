@@ -9,3 +9,11 @@ k8s/**/overlays/*/.env
 .DS_Store
 kubeconfig
 *.kubeconfig
+
+# Gerado por scripts/aws-render.sh a partir do `terraform output` (tem senhas)
+k8s/**/overlays/aws/generated/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform/aws/backend.hcl

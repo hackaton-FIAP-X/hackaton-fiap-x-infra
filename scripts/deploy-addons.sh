@@ -13,8 +13,11 @@ require kubectl
 INGRESS_NGINX_VERSION="${INGRESS_NGINX_VERSION:-controller-v1.11.3}"
 METRICS_SERVER_VERSION="${METRICS_SERVER_VERSION:-v0.7.2}"
 
-log "instalando Ingress NGINX (${INGRESS_NGINX_VERSION})"
-kubectl apply -f "https://raw.githubusercontent.com/kubernetes/ingress-nginx/${INGRESS_NGINX_VERSION}/deploy/static/provider/kind/deploy.yaml"
+# kind: controller no no com ingress-ready e portas 80/443 do host.
+# aws: Service LoadBalancer, que vira um NLB na frente do cluster.
+PROVIDER="${PROVIDER:-kind}"
+log "instalando Ingress NGINX (${INGRESS_NGINX_VERSION}, provider ${PROVIDER})"
+kubectl apply -f "https://raw.githubusercontent.com/kubernetes/ingress-nginx/${INGRESS_NGINX_VERSION}/deploy/static/provider/${PROVIDER}/deploy.yaml"
 
 log "instalando metrics-server (${METRICS_SERVER_VERSION})"
 kubectl apply -f "https://github.com/kubernetes-sigs/metrics-server/releases/download/${METRICS_SERVER_VERSION}/components.yaml"

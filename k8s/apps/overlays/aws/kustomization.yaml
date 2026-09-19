@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Overlay dos servicos no EKS. Tudo que depende do `terraform apply` (endpoints,
+# senhas, URLs do ECR) e gerado por scripts/aws-render.sh em generated/,
+# que e git-ignored.
+namespace: fiapx
+
+resources:
+  - ../../base
+  - job-create-videodb.yaml
+
+secretGenerator:
+  - name: app-credentials
+    envs:
+      - generated/app.env
+
+generatorOptions:
+  labels:
+    app.kubernetes.io/part-of: fiapx
+
+replicas:
+  - name: video-service
+    count: 2
+  - name: video-processor
+    count: 2
+
+patches:
+  - path: generated/auth-service.yaml
+  - path: generated/video-service.yaml
+  - path: generated/video-processor.yaml
+  - path: generated/images.yaml

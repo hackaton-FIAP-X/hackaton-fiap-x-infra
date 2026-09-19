@@ -7,6 +7,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 require kubectl
 fail=0
+# local: infra de apoio roda no cluster (kind). aws: Postgres, RabbitMQ, Redis e
+# S3 sao gerenciados, entao as checagens de StatefulSet/PVC/DNS/MinIO nao se aplicam.
+TARGET="${VERIFY_TARGET:-local}"
 check() { if eval "$2"; then log "OK  - $1"; else warn "FALHOU - $1"; fail=1; fi; }
 
 # porta HTTP de cada serviço
@@ -14,6 +17,7 @@ port_for() { case "$1" in
   auth-service) echo 8080 ;; video-service) echo 8081 ;; video-processor) echo 8082 ;;
 esac; }
 
+if [[ "${TARGET}" == "local" ]]; then
 log "== PLT-2: infra Running =="
 for sts in postgres rabbitmq minio redis; do
   check "statefulset ${sts} pronto" \
@@ -38,6 +42,7 @@ if [[ -n "${POD}" ]]; then
     "kubectl -n ${NAMESPACE} exec ${POD} -- sh -c 'getent hosts postgres.fiapx.svc.cluster.local && getent hosts rabbitmq.fiapx.svc.cluster.local' >/dev/null"
 else
   warn "PULADO - pod do video-service ainda não existe"
+fi
 fi
 
 log "== PLT-1: serviços Running + health UP + sem restart =="
@@ -197,6 +202,7 @@ else
   warn "PULADO - observabilidade não aplicada (rode ./scripts/deploy-observability.sh)"
 fi
 
+if [[ "${TARGET}" == "local" ]]; then
 log "== PLT-2: persistência do Postgres sobrevive a delete de pod =="
 # marcador unico: o teste roda varias vezes sobre o mesmo volume
 MARK="$(date +%s)${RANDOM}"
@@ -218,5 +224,6 @@ for svc in "${SERVICES[@]}"; do
 done
 check "servicos voltaram a ficar prontos depois do Postgres reiniciar" \
   "for s in ${SERVICES[*]}; do [ \"\$(kubectl -n ${NAMESPACE} get deploy \$s -o jsonpath='{.status.readyReplicas}')\" = \"\$(kubectl -n ${NAMESPACE} get deploy \$s -o jsonpath='{.spec.replicas}')\" ] || exit 1; done"
+fi
 
 if [[ ${fail} -eq 0 ]]; then log "TUDO OK ✅"; else die "algumas checagens falharam ❌"; fi

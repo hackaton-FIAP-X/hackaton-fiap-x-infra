@@ -65,6 +65,61 @@ Caminho mais leve para desenvolver. Usa as mesmas imagens do kind (o alvo já
 roda o `build-images.sh`). Portas no host: auth `8080`, video `8081`, processor
 `8082`. Não tem Ingress nem HPA — para a demo de escalabilidade use o kind.
 
+## Subir na AWS (Terraform) — AWS Academy Learner Lab
+
+Infra como código em `terraform/`. Alvo: **AWS Academy Learner Lab** (us-east-1),
+que não permite criar IAM — o cluster e os nós usam o `LabRole` que já existe.
+
+| Recurso | Terraform | No lugar de (local) |
+|---|---|---|
+| VPC 2 AZs, 1 NAT | `network.tf` | rede do kind |
+| **EKS** 1.31, 2× t3.large (até 4) | `eks.tf` | kind |
+| **ECR** (3 repositórios) | `ecr.tf` | imagens `:local` |
+| **RDS Postgres 16** (`authdb` + `videodb`) | `data.tf` | StatefulSet Postgres |
+| **Amazon MQ — RabbitMQ 3.13** (AMQPS) | `data.tf` | StatefulSet RabbitMQ |
+| **ElastiCache Redis 7** | `data.tf` | StatefulSet Redis |
+| **S3** | `s3.tf` | MinIO |
+
+No cluster ficam só os serviços, Ingress NGINX (vira um NLB), metrics-server,
+Prometheus/Grafana e Mailhog.
+
+```bash
+# 1. No Learner Lab: Start Lab -> AWS Details -> AWS CLI. Exporte as 3 variáveis:
+export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
+
+# 2. Sobe tudo: bucket do estado, Terraform, imagens no ECR, deploy e verify
+make env            # se ainda não tiver o infra/.env
+./scripts/aws-up.sh # 20-30 min na primeira vez
+
+# 3. Depois da demo — SEMPRE, o crédito do lab é limitado
+./scripts/aws-down.sh
+```
+
+- **Estado remoto:** bucket S3 criado por `terraform/bootstrap` (lock nativo do
+  S3, sem DynamoDB). O `aws-up.sh` cria na primeira vez e grava
+  `terraform/aws/backend.hcl` (git-ignored).
+- **Credenciais do S3 nos pods:** nenhuma chave fixa. Os pods usam o `LabRole`
+  do nó pela cadeia padrão da AWS (IMDSv2 com hop limit 2 no launch template).
+- **Segredos:** senhas do RDS e do Amazon MQ são geradas pelo Terraform e vão
+  direto para o Secret `app-credentials` via `scripts/aws-render.sh`
+  (`k8s/*/overlays/aws/generated/`, git-ignored).
+- **`aws-down.sh`** apaga o NLB do Ingress antes do `terraform destroy`: um load
+  balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC.
+
+### Testar o Terraform sem AWS (Floci)
+
+```bash
+./scripts/tf-floci.sh   # apply + destroy completo contra o Floci, em ~8 min
+```
+
+O [Floci](https://github.com/floci-io/floci) é um emulador AWS local e gratuito
+(RDS e ElastiCache sobem de verdade em containers). O script aplica o stack
+`terraform/aws` com um `_override.tf` que aponta o provider para
+`localhost:4566`, sem tocar no código. A CI (`.github/workflows/terraform.yml`)
+roda isso a cada PR que mexe em `terraform/`, gera os overlays aws a partir dos
+outputs e valida os manifests. O Floci emula a API: o teste de runtime dos
+pods continua sendo o kind e, no fim, o EKS real.
+
 ---
 
 ## O que sobe
@@ -250,11 +305,16 @@ infra/
 ├── Makefile                        # atalhos (make help)
 ├── docker-compose.yml              # ambiente completo sem Kubernetes (PLT-4)
 ├── kind/kind-config.yaml           # 1 control-plane + 2 workers, portas 80/443
+├── terraform/
+│   ├── bootstrap/                  # bucket do estado remoto
+│   ├── aws/                        # VPC, EKS, ECR, RDS, Amazon MQ, ElastiCache, S3
+│   └── floci/                      # override para testar no emulador
 ├── scripts/                        # bash puro, sem dependência de make
 ├── k8s/
 │   ├── namespace.yaml
 │   ├── infra/{base,overlays/local}          # PLT-2
 │   ├── apps/{base,overlays/local}           # PLT-1 + HPA (PLT-3)
+│   ├── apps/overlays/aws, infra/overlays/aws # EKS (gerados pelo aws-render.sh)
 │   ├── ingress/{base,overlays/local}        # PLT-3
 │   └── observability/{base,overlays/local}  # PLT-7
 ├── .env.example                    # template de segredos (CHANGE_ME)

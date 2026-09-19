@@ -1,0 +1,100 @@
+name: Terraform
+
+# Valida a infra AWS (terraform/) sem conta AWS nem custo: formato, validate,
+# tflint e um apply + destroy completo contra o Floci (emulador AWS local).
+# No meio, gera os overlays aws a partir dos outputs reais e valida os
+# manifests — a mesma cadeia do scripts/aws-up.sh, so que sem o EKS de verdade.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'k8s/**/overlays/aws/**'
+      - 'scripts/aws-*.sh'
+      - 'scripts/tf-floci.sh'
+      - '.github/workflows/terraform.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: fmt, validate e tflint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.53.0
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform/
+
+      - name: terraform validate
+        run: |
+          for stack in terraform/bootstrap terraform/aws; do
+            terraform -chdir="$stack" init -backend=false -input=false >/dev/null
+            terraform -chdir="$stack" validate
+          done
+
+      - name: tflint
+        run: |
+          for stack in terraform/bootstrap terraform/aws; do
+            tflint --chdir="$stack" --format compact
+          done
+
+  floci:
+    name: apply + destroy no Floci
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: static
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+          terraform_wrapper: false
+
+      - name: Instala kustomize e kubeconform
+        run: |
+          curl -sSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" \
+            | tar xz -C /usr/local/bin
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+            | tar xz -C /usr/local/bin kubeconform
+
+      - name: terraform apply no Floci
+        run: KEEP=1 ./scripts/tf-floci.sh | tee apply.log
+
+      - name: Gera os overlays aws a partir dos outputs e valida os manifests
+        run: |
+          WORK="$(sed -n 's/.*estado fica em \([^ ]*\) .*/\1/p' apply.log | tail -1)"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
+          ./scripts/gen-env.sh
+          TF_DIR="$WORK" IMAGE_TAG=ci ./scripts/aws-render.sh
+          kustomize build k8s/apps/overlays/aws > /tmp/aws-apps.yaml
+          kustomize build k8s/infra/overlays/aws > /tmp/aws-infra.yaml
+          kubeconform -strict -summary /tmp/aws-apps.yaml /tmp/aws-infra.yaml
+
+      - name: terraform destroy no Floci
+        if: always()
+        run: |
+          [ -n "${WORK:-}" ] || exit 0
+          export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test
+          # limitacao do Floci: ECR nao apaga de verdade (ver scripts/tf-floci.sh)
+          terraform -chdir="$WORK" state list | grep -E '^aws_ecr_' \
+            | xargs -r -d '\n' terraform -chdir="$WORK" state rm >/dev/null
+          terraform -chdir="$WORK" destroy -auto-approve -input=false

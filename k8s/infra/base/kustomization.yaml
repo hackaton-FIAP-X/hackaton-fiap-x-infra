@@ -15,5 +15,4 @@ resources:
   - minio/job-createbuckets.yaml
   - redis/service.yaml
   - redis/statefulset.yaml
-  - mailhog/deployment.yaml
-  - mailhog/service.yaml
+  - mailhog
