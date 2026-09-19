@@ -4,9 +4,9 @@ Repositório de plataforma do Hackathon FIAP X (Sistema de Processamento de Víd
 Sobe um cluster **kind** local com a infra de apoio, os três serviços, Ingress,
 HPA e observabilidade — ou tudo via **docker compose**, se você não quiser Kubernetes.
 
-Trilha PLT (Plataforma): **PLT-1, 2, 3, 4, 5, 6, 7 e 10** no repo.
-Fora deste repo: PLT-8 (notificação por e-mail, no video-service) e PLT-9
-(`schema.sql`, no repo docs).
+Trilha PLT (Plataforma): **PLT-1 a PLT-10**. PLT-8 (aviso de falha por e-mail)
+é código do video-service; aqui ele recebe o Mailhog (`MAIL_HOST`) e o
+`verify.sh` confere que o e-mail chegou. PLT-9 (`schema.sql`) mora no repo docs.
 
 ---
 
@@ -234,7 +234,8 @@ curl http://localhost/.well-known/jwks.json
 `iss`/`alg` do token, 401 com senha errada, token aceito pelo video-service,
 401 sem token e 429 no rate limit) e o **E2E do processamento**: um MP4 real
 chega a `COMPLETED` com o ZIP no storage e o redirect de download, e um arquivo
-corrompido chega a `FAILED` (`INVALID_VIDEO`) com a mensagem na DLQ.
+corrompido chega a `FAILED` (`INVALID_VIDEO`) com a mensagem na DLQ e o **e-mail
+de aviso entregue ao dono no Mailhog** (PLT-8).
 
 O resto via `make demo`, que abre os port-forwards:
 

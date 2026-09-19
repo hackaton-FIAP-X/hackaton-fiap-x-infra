@@ -28,6 +28,10 @@ data:
   STORAGE_BUCKET: "fiapx"
   STORAGE_REGION: "us-east-1"
 
+  # PLT-8: aviso de falha por e-mail (Mailhog no cluster, local e na AWS)
+  MAIL_HOST: "mailhog.fiapx.svc.cluster.local"
+  MAIL_PORT: "1025"
+
   # Validacao offline do token pela JWKS do auth-service (VID-2)
   JWT_JWKS_URI: "http://auth-service.fiapx.svc.cluster.local:8080/.well-known/jwks.json"
   JWT_ISSUER: "fiapx-auth"

@@ -168,6 +168,16 @@ if curl -s -o /dev/null --max-time 5 "${BASE}/auth/login"; then
     FINAL="$(await_final "${BAD_ID}")"
     check "video corrompido chega a FAILED com INVALID_VIDEO" \
       "echo '${FINAL}' | grep -q '\"status\":\"FAILED\"' && echo '${FINAL}' | grep -q 'INVALID_VIDEO'"
+    # PLT-8: o dono recebe o aviso de falha por e-mail (Mailhog no cluster)
+    MAIL_FOUND=""
+    for _ in $(seq 1 20); do
+      MAIL_FOUND="$(kubectl -n "${NAMESPACE}" exec deploy/mailhog -- \
+        wget -qO- "http://localhost:8025/api/v2/search?kind=containing&query=${BAD_ID}" 2>/dev/null \
+        | grep -c "${BAD_ID}" || true)"
+      [[ "${MAIL_FOUND:-0}" -ge 1 ]] && break
+      sleep 2
+    done
+    check "e-mail de falha entregue ao dono no Mailhog (PLT-8)" "[ '${MAIL_FOUND:-0}' -ge 1 ] 2>/dev/null"
     if kubectl -n "${NAMESPACE}" get pod rabbitmq-0 >/dev/null 2>&1; then
       DLQ="$(kubectl -n "${NAMESPACE}" exec rabbitmq-0 -- rabbitmqctl -q list_queues name messages 2>/dev/null \
         | awk '$1=="video.processing.dlq" {print $2}')"
