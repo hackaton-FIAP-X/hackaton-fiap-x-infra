@@ -5,8 +5,10 @@
 # o Learner Lab nega mq:CreateBroker, entao o Amazon MQ nao e opcao (ADR-002).
 
 resource "aws_security_group" "data" {
-  name        = "${var.project}-data"
-  description = "Postgres e Redis, liberados so para o EKS"
+  name = "${var.project}-data"
+  # Texto antigo de proposito: mudar a description RECRIA o SG, e o Learner Lab
+  # nega desanexar a ENI do RDS (DetachNetworkInterface) -> o apply falha.
+  description = "Postgres, RabbitMQ (AMQPS) e Redis, liberados so para o EKS"
   vpc_id      = aws_vpc.main.id
   tags        = { Name = "${var.project}-data" }
 }
