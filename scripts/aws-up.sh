@@ -1,54 +1,47 @@
 #!/usr/bin/env bash
-# Sobe o FIAP X inteiro na AWS (Learner Lab): Terraform -> imagens no ECR ->
-# deploy no EKS -> verify. Pensado para a demo: suba, grave, rode aws-down.sh.
+# Sobe (ou atualiza) o FIAP X na AWS: Terraform -> imagens no ECR -> deploy no
+# EKS -> verify. Usado igual na maquina de um dev e no CD.
 #
-# Pre-requisitos: credenciais da sessao do Learner Lab exportadas (AWS Details ->
-# AWS CLI: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN),
-# terraform >= 1.10, aws cli, kubectl, docker, e infra/.env (./scripts/gen-env.sh).
+# Credenciais: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_SESSION_TOKEN da
+# sessao do Learner Lab (AWS Details -> AWS CLI). No CD vem dos secrets do repo.
 #
-# Uso: ./scripts/aws-up.sh              # tudo
-#      SKIP_TERRAFORM=1 ./scripts/aws-up.sh   # so imagens + deploy (infra ja existe)
+# Opcoes (variaveis de ambiente):
+#   ONLY_IF_UP=1   nao cria nada: se o cluster nao existe, sai sem erro. E o modo do
+#                  deploy automatico a cada merge — o ambiente so nasce pelo botao
+#                  "up", para um merge nao ligar o EKS e gastar o credito do lab.
+#   SKIP_BUILD=1   nao roda build-images.sh (o CD ja construiu as imagens :local)
+#   IMAGE_TAG=...  tag das imagens no ECR (default: SHA do commit + timestamp)
 set -euo pipefail
-# shellcheck source=./lib.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# shellcheck source=./aws-lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/aws-lib.sh"
 
 require terraform aws kubectl docker python3 curl
+require_aws_session
 
-TF_DIR="${INFRA_DIR}/terraform/aws"
-BOOT_DIR="${INFRA_DIR}/terraform/bootstrap"
-export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
-
-aws sts get-caller-identity >/dev/null 2>&1 \
-  || die "sem credenciais AWS validas. Exporte as da sessao do Learner Lab (AWS Details -> AWS CLI)."
-[[ -f "${INFRA_DIR}/.env" ]] || "${INFRA_DIR}/scripts/gen-env.sh"
-
-# ---------------------------------------------------------------- terraform --
-if [[ "${SKIP_TERRAFORM:-0}" != "1" ]]; then
-  if [[ ! -f "${TF_DIR}/backend.hcl" ]]; then
-    log "primeira vez: criando o bucket do estado (terraform/bootstrap)"
-    terraform -chdir="${BOOT_DIR}" init -input=false >/dev/null
-    terraform -chdir="${BOOT_DIR}" apply -input=false -auto-approve -var "region=${AWS_DEFAULT_REGION}"
-    printf 'bucket = "%s"\nregion = "%s"\n' \
-      "$(terraform -chdir="${BOOT_DIR}" output -raw state_bucket)" "${AWS_DEFAULT_REGION}" > "${TF_DIR}/backend.hcl"
-  fi
-  log "terraform apply (15-25 min na primeira vez: EKS, RDS e Amazon MQ demoram)"
-  terraform -chdir="${TF_DIR}" init -input=false -backend-config=backend.hcl >/dev/null
-  terraform -chdir="${TF_DIR}" apply -input=false -auto-approve -var "region=${AWS_DEFAULT_REGION}"
+if [[ "${ONLY_IF_UP:-0}" == "1" ]] && ! cluster_exists; then
+  log "ambiente AWS desligado (cluster ${CLUSTER_NAME} nao existe): nada a atualizar."
+  log "para criar: Actions -> 'AWS - ambiente' -> acao up (ou ./scripts/aws-up.sh)."
+  exit 0
 fi
 
-tf_out() { terraform -chdir="${TF_DIR}" output -raw "$1"; }
-CLUSTER_NAME="$(tf_out cluster_name)"
-ECR="$(tf_out ecr_registry)"
+# ---------------------------------------------------------------- terraform --
+ensure_state_bucket
+tf_init
+log "terraform apply (15-25 min na primeira vez: EKS, RDS e Amazon MQ demoram)"
+terraform -chdir="${TF_DIR}" apply -input=false -auto-approve -var "region=${AWS_DEFAULT_REGION}"
 
+ECR="$(tf_out ecr_registry)"
 log "kubeconfig do EKS"
-aws eks update-kubeconfig --name "${CLUSTER_NAME}" --region "${AWS_DEFAULT_REGION}" >/dev/null
+aws eks update-kubeconfig --name "$(tf_out cluster_name)" --region "${AWS_DEFAULT_REGION}" >/dev/null
 kubectl wait --for=condition=Ready nodes --all --timeout=600s
 
 # ------------------------------------------------------------------ imagens --
 IMAGE_TAG="${IMAGE_TAG:-$(git -C "${INFRA_DIR}" rev-parse --short=12 HEAD)-$(date +%s)}"
-log "build e push das imagens para o ECR (tag ${IMAGE_TAG})"
 aws ecr get-login-password | docker login --username AWS --password-stdin "${ECR}" >/dev/null
-"${INFRA_DIR}/scripts/build-images.sh"
+if [[ "${SKIP_BUILD:-0}" != "1" ]]; then
+  "${INFRA_DIR}/scripts/build-images.sh"
+fi
+log "push das imagens para o ECR (tag ${IMAGE_TAG})"
 IMAGE_REGISTRY="${ECR}/fiapx" "${INFRA_DIR}/scripts/push-images.sh" "${IMAGE_TAG}"
 
 # ------------------------------------------------------------------- deploy --
@@ -80,4 +73,12 @@ export BASE_URL="http://${LB}"
 INGRESS_TIMEOUT_S=600 "${INFRA_DIR}/scripts/deploy-ingress.sh"
 
 VERIFY_TARGET=aws BASE_URL="${BASE_URL}" "${INFRA_DIR}/scripts/verify.sh"
-log "no ar: ${BASE_URL}  (derrube com ./scripts/aws-down.sh)"
+log "no ar: ${BASE_URL}"
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+  {
+    echo "### Ambiente AWS no ar"
+    echo "- API: ${BASE_URL} (\`/auth\`, \`/videos\`)"
+    echo "- Imagens: \`${ECR}/fiapx/*:${IMAGE_TAG}\`"
+    echo "- Grafana: \`kubectl -n fiapx port-forward svc/grafana 3000:3000\`"
+  } >> "${GITHUB_STEP_SUMMARY}"
+fi

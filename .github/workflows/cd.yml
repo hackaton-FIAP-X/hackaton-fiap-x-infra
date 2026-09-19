@@ -6,25 +6,26 @@ name: CD
 # um servico via repository_dispatch), este workflow:
 #   1. faz checkout do infra e dos 3 servicos lado a lado, como no workspace local;
 #   2. constroi as 3 imagens com os mesmos scripts do `make up`;
-#   3. publica no GHCR com a tag do SHA do commit (e `latest` na main);
-#   4. sobe um kind efemero, aplica todos os manifests (incluindo Prometheus e
+#   3. sobe um kind efemero, aplica todos os manifests (incluindo Prometheus e
 #      Grafana) e roda o scripts/verify.sh como smoke test — o mesmo que um dev
-#      roda na maquina. O smoke test falha se alguma checagem for pulada.
+#      roda na maquina. O smoke test falha se alguma checagem for pulada;
+#   4. se passou, e e a main, publica no ECR e faz o deploy no EKS da AWS
+#      (scripts/aws-up.sh), com o verify.sh rodando la tambem. So ATUALIZA um
+#      ambiente que ja esta no ar: criar/destruir e pelo workflow "AWS - ambiente",
+#      para um merge nao ligar o EKS sozinho e gastar o credito do Learner Lab.
 #
-# Segredo necessario:
-#   SERVICES_READ_TOKEN — PAT fine-grained (ou token de GitHub App) com leitura
-#   de contents nos repos dos servicos. O GITHUB_TOKEN so enxerga o proprio infra.
-#   Se os repos forem publicos, o workflow cai no GITHUB_TOKEN.
+# Secrets do repo infra (Settings -> Secrets and variables -> Actions):
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
+#     credenciais da sessao do Learner Lab (AWS Details -> AWS CLI). Expiram a
+#     cada sessao: atualize ao abrir o lab. Sem elas o passo 4 e pulado.
+#   SERVICES_READ_TOKEN (opcional) — leitura dos repos dos servicos, so se algum
+#     deles ficar privado.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
-      push_images:
-        description: Publicar as imagens no GHCR
-        type: boolean
-        default: true
       auth_ref:
         description: Branch/tag/SHA do auth-service (valida um PR antes do merge)
         default: main
@@ -45,15 +46,15 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   ORG: hackaton-FIAP-X
-  IMAGE_REGISTRY: ghcr.io/hackaton-fiap-x
+  # secrets nao podem aparecer em `if:`; o job le daqui se ha credencial da AWS
+  HAS_AWS: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
 
 jobs:
   deliver:
-    name: build, publish e deploy em kind efemero
+    name: build, kind efemero e deploy na AWS
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -112,23 +113,6 @@ jobs:
         working-directory: infra
         run: ./scripts/build-images.sh
 
-      - name: Login no GHCR
-        if: github.event_name != 'workflow_dispatch' || inputs.push_images
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publica no GHCR (tag = SHA do commit do infra)
-        if: github.event_name != 'workflow_dispatch' || inputs.push_images
-        working-directory: infra
-        run: |
-          tags=("${{ steps.sha.outputs.infra }}")
-          [[ "${GITHUB_REF}" == "refs/heads/main" ]] && tags+=(latest)
-          ./scripts/push-images.sh "${tags[@]}"
-          echo "Imagens publicadas com as tags: ${tags[*]}" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Sobe kind efemero
         working-directory: infra
         run: ./scripts/kind-up.sh
@@ -175,6 +159,31 @@ jobs:
             echo "### Smoke test"
             echo "$(sed 's/\x1b\[[0-9;]*m//g' verify.log | grep -c 'OK  -') checagens OK, nenhuma pulada."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Instala Terraform (deploy na AWS)
+        if: env.HAS_AWS == 'true' && github.ref == 'refs/heads/main'
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+          terraform_wrapper: false
+
+      - name: Deploy na AWS (atualiza o ambiente se estiver no ar)
+        if: env.HAS_AWS == 'true' && github.ref == 'refs/heads/main'
+        working-directory: infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          # as imagens :local ja foram construidas e testadas no kind acima
+          ONLY_IF_UP=1 SKIP_BUILD=1 IMAGE_TAG="${{ steps.sha.outputs.infra }}-${{ github.run_number }}" \
+            ./scripts/aws-up.sh
+
+      - name: Deploy na AWS pulado
+        if: env.HAS_AWS != 'true' && github.ref == 'refs/heads/main'
+        run: |
+          echo "::notice::Deploy na AWS pulado: cadastre AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_SESSION_TOKEN nos secrets do repo infra."
 
       - name: Diagnostico em caso de falha
         if: failure()

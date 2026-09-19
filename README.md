@@ -83,26 +83,51 @@ que não permite criar IAM — o cluster e os nós usam o `LabRole` que já exis
 No cluster ficam só os serviços, Ingress NGINX (vira um NLB), metrics-server,
 Prometheus/Grafana e Mailhog.
 
+### Deploy automático pelo GitHub Actions (recomendado)
+
+1. **Uma vez por sessão do Learner Lab:** *Start Lab* → *AWS Details* → *AWS CLI: Show*.
+   Copie os 3 valores para os **secrets do repo `infra`** (*Settings → Secrets and
+   variables → Actions → New repository secret*), com estes nomes exatos:
+
+   | Secret | Valor do Learner Lab |
+   |---|---|
+   | `AWS_ACCESS_KEY_ID` | `aws_access_key_id` |
+   | `AWS_SECRET_ACCESS_KEY` | `aws_secret_access_key` |
+   | `AWS_SESSION_TOKEN` | `aws_session_token` |
+
+   As credenciais do lab **expiram a cada sessão (~4h)**: atualize os 3 secrets
+   sempre que abrir o lab.
+
+2. **Ligar o ambiente:** *Actions → AWS - ambiente → Run workflow → up*. Cria a
+   infra com Terraform, publica as imagens no ECR, faz o deploy no EKS e roda o
+   `verify.sh` lá. A URL da API aparece no resumo da execução. Leva 20-30 min na
+   primeira vez.
+3. **Com o ambiente no ar, cada merge na `main` do infra atualiza tudo sozinho:**
+   o CD valida no kind e, se passar, faz `terraform apply`, publica no ECR e
+   redeploya no EKS. Com o ambiente desligado, o CD só valida no kind — um merge
+   nunca liga o EKS por conta própria.
+4. **Depois da demo, sempre:** *Actions → AWS - ambiente → down*.
+
+### Pela sua máquina
+
 ```bash
-# 1. No Learner Lab: Start Lab -> AWS Details -> AWS CLI. Exporte as 3 variáveis:
 export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
-
-# 2. Sobe tudo: bucket do estado, Terraform, imagens no ECR, deploy e verify
-make env            # se ainda não tiver o infra/.env
-./scripts/aws-up.sh # 20-30 min na primeira vez
-
-# 3. Depois da demo — SEMPRE, o crédito do lab é limitado
-./scripts/aws-down.sh
+./scripts/aws-up.sh     # mesmo script que o CD usa
+./scripts/aws-down.sh   # ALL=1 apaga também o bucket do estado
 ```
 
-- **Estado remoto:** bucket S3 criado por `terraform/bootstrap` (lock nativo do
-  S3, sem DynamoDB). O `aws-up.sh` cria na primeira vez e grava
-  `terraform/aws/backend.hcl` (git-ignored).
+- **Estado remoto:** bucket `fiapx-tfstate-<conta>-<região>`, de nome fixo e
+  criado sozinho na primeira execução (`scripts/aws-lib.sh`). Por ter nome
+  fixo, a sua máquina e o CD enxergam o mesmo estado. Lock nativo do S3.
+- **Segredos da aplicação** (pepper das senhas, par RSA do JWT, senha do
+  Grafana): gerados pelo Terraform (`terraform/aws/secrets.tf`) e guardados no
+  estado. Ficam estáveis entre deploys — gerar de novo a cada deploy invalidaria
+  as senhas cadastradas e os tokens emitidos.
 - **Credenciais do S3 nos pods:** nenhuma chave fixa. Os pods usam o `LabRole`
   do nó pela cadeia padrão da AWS (IMDSv2 com hop limit 2 no launch template).
-- **Segredos:** senhas do RDS e do Amazon MQ são geradas pelo Terraform e vão
-  direto para o Secret `app-credentials` via `scripts/aws-render.sh`
-  (`k8s/*/overlays/aws/generated/`, git-ignored).
+- **Senhas do RDS e do Amazon MQ:** geradas pelo Terraform e levadas ao Secret
+  `app-credentials` por `scripts/aws-render.sh` (`k8s/*/overlays/aws/generated/`,
+  git-ignored).
 - **`aws-down.sh`** apaga o NLB do Ingress antes do `terraform destroy`: um load
   balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC.
 
@@ -307,7 +332,6 @@ infra/
 ├── docker-compose.yml              # ambiente completo sem Kubernetes (PLT-4)
 ├── kind/kind-config.yaml           # 1 control-plane + 2 workers, portas 80/443
 ├── terraform/
-│   ├── bootstrap/                  # bucket do estado remoto
 │   ├── aws/                        # VPC, EKS, ECR, RDS, Amazon MQ, ElastiCache, S3
 │   └── floci/                      # override para testar no emulador
 ├── scripts/                        # bash puro, sem dependência de make

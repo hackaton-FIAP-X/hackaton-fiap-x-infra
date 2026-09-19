@@ -58,3 +58,16 @@ Secret `app-credentials`; o `video-service` só enxerga a pública, pela JWKS.
 Trocar o `.env` git-ignored por **Sealed Secrets** (controller Bitnami): o
 `SealedSecret` é cifrado e pode ser versionado com segurança, e o CD (PLT-6)
 não precisa de um `.env` fora do git.
+
+## Na AWS
+
+Nada de `.env`. Duas origens:
+
+- **Credenciais da AWS** (para o Terraform e o deploy): secrets do repo `infra`
+  no GitHub — `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` —
+  ou as mesmas variáveis exportadas no terminal. São as da sessão do Learner Lab
+  e expiram a cada sessão.
+- **Segredos da aplicação** (senhas do RDS e do Amazon MQ, pepper, par RSA do
+  JWT, senha do Grafana): gerados pelo Terraform e guardados no estado, num
+  bucket S3 criptografado e privado. `scripts/aws-render.sh` os leva para os
+  Secrets do cluster. Nunca aparecem no repositório.

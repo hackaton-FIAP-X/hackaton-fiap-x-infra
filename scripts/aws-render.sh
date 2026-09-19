@@ -19,9 +19,8 @@ OUT="$(terraform -chdir="${TF_DIR}" output -json)"
 
 IMAGE_TAG="${IMAGE_TAG:?informe IMAGE_TAG (a tag publicada no ECR)}" \
 APPS_GEN="${APPS_GEN}" INFRA_GEN="${INFRA_GEN}" INFRA_DIR="${INFRA_DIR}" \
-GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-}" \
 python3 - "${OUT}" <<'PY'
-import json, os, secrets, sys
+import json, os, sys
 
 out = {k: v["value"] for k, v in json.loads(sys.argv[1]).items()}
 apps, infra, tag = os.environ["APPS_GEN"], os.environ["INFRA_GEN"], os.environ["IMAGE_TAG"]
@@ -74,31 +73,20 @@ spec:
 write(f"{apps}/images.yaml", images)
 
 # Segredos: credenciais do S3 ficam VAZIAS de proposito — os pods usam o LabRole
-# do no (cadeia padrao da AWS). Chaves fixas nao funcionam no Learner Lab.
-env_app = os.path.join(os.environ.get("INFRA_DIR", ""), ".env")
-keys = {}
-try:
-    with open(env_app) as f:
-        keys = dict(l.split("=", 1) for l in f.read().splitlines() if "=" in l and not l.startswith("#"))
-except FileNotFoundError:
-    pass
-pepper = keys.get("PASSWORD_PEPPER") or secrets.token_hex(24)
+# do no (cadeia padrao da AWS). Pepper, chaves do JWT e senha do Grafana vem do
+# estado do Terraform (terraform/aws/secrets.tf): estaveis entre deploys e iguais
+# para quem rodar, maquina local ou CD.
 app_env = {
     "DB_USER": out["db_user"], "DB_PASSWORD": out["db_password"],
     "RABBITMQ_USER": out["mq_user"], "RABBITMQ_PASSWORD": out["mq_password"],
     "RABBITMQ_PASS": out["mq_password"],
     "STORAGE_ACCESS_KEY": "", "STORAGE_SECRET_KEY": "",
     "SPRING_DATA_REDIS_PASSWORD": "",
-    "PASSWORD_PEPPER": pepper,
-    "JWT_PRIVATE_KEY": keys.get("JWT_PRIVATE_KEY", ""),
-    "JWT_PUBLIC_KEY": keys.get("JWT_PUBLIC_KEY", ""),
+    "PASSWORD_PEPPER": out["password_pepper"],
+    "JWT_PRIVATE_KEY": out["jwt_private_key"],
+    "JWT_PUBLIC_KEY": out["jwt_public_key"],
 }
-missing = [k for k in ("JWT_PRIVATE_KEY", "JWT_PUBLIC_KEY") if not app_env[k] or app_env[k].startswith("CHANGE_ME")]
-if missing:
-    sys.exit(f"faltam {missing} em infra/.env — rode ./scripts/gen-env.sh antes")
 write(f"{apps}/app.env", "".join(f"{k}={v}\n" for k, v in app_env.items()))
-
-grafana = os.environ.get("GRAFANA_ADMIN_PASSWORD") or keys.get("GRAFANA_ADMIN_PASSWORD") or secrets.token_hex(12)
-write(f"{infra}/infra.env", f"GRAFANA_ADMIN_PASSWORD={grafana}\n")
+write(f"{infra}/infra.env", f"GRAFANA_ADMIN_PASSWORD={out['grafana_admin_password']}\n")
 print(f"overlays aws gerados (imagens :{tag}, bucket {out['bucket']})")
 PY

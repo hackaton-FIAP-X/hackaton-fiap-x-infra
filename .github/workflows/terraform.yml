@@ -12,6 +12,7 @@ on:
       - 'terraform/**'
       - 'k8s/**/overlays/aws/**'
       - 'scripts/aws-*.sh'
+      - '.github/workflows/aws.yml'
       - 'scripts/tf-floci.sh'
       - '.github/workflows/terraform.yml'
   push:
@@ -46,16 +47,12 @@ jobs:
 
       - name: terraform validate
         run: |
-          for stack in terraform/bootstrap terraform/aws; do
-            terraform -chdir="$stack" init -backend=false -input=false >/dev/null
-            terraform -chdir="$stack" validate
-          done
+          terraform -chdir=terraform/aws init -backend=false -input=false >/dev/null
+          terraform -chdir=terraform/aws validate
 
       - name: tflint
         run: |
-          for stack in terraform/bootstrap terraform/aws; do
-            tflint --chdir="$stack" --format compact
-          done
+          tflint --chdir=terraform/aws --format compact
 
   floci:
     name: apply + destroy no Floci
@@ -83,7 +80,6 @@ jobs:
         run: |
           WORK="$(sed -n 's/.*estado fica em \([^ ]*\) .*/\1/p' apply.log | tail -1)"
           echo "WORK=$WORK" >> "$GITHUB_ENV"
-          ./scripts/gen-env.sh
           TF_DIR="$WORK" IMAGE_TAG=ci ./scripts/aws-render.sh
           kustomize build k8s/apps/overlays/aws > /tmp/aws-apps.yaml
           kustomize build k8s/infra/overlays/aws > /tmp/aws-infra.yaml
