@@ -151,6 +151,9 @@ services:
       STORAGE_BUCKET: fiapx
       JWT_JWKS_URI: http://auth-service:8080/.well-known/jwks.json
       JWT_ISSUER: fiapx-auth
+      # PLT-8: aviso de falha por e-mail
+      MAIL_HOST: mailhog
+      MAIL_PORT: '1025'
     restart: unless-stopped
 
   video-processor:
