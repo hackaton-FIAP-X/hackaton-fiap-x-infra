@@ -190,6 +190,9 @@ jobs:
         run: |
           kubectl get pods -A -o wide || true
           kubectl -n fiapx get events --sort-by=.lastTimestamp | tail -40 || true
+          kubectl -n fiapx get pvc,statefulset || true
+          kubectl get pv,storageclass || true
+          kubectl -n fiapx describe pod rabbitmq-0 | tail -30 || true
           for d in auth-service video-service video-processor prometheus grafana; do
             echo "::group::logs $d"
             kubectl -n fiapx logs deploy/$d --tail=80 || true
