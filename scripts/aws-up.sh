@@ -55,7 +55,16 @@ kubectl -n "${NAMESPACE}" delete job create-videodb --ignore-not-found >/dev/nul
 kubectl apply -k "${INFRA_DIR}/k8s/infra/overlays/aws"
 # os servicos declaram a topologia no RabbitMQ ao subir: ele vem antes
 log "aguardando o RabbitMQ (volume EBS novo leva ~1 min)..."
-kubectl -n "${NAMESPACE}" rollout status statefulset/rabbitmq --timeout=600s
+if ! kubectl -n "${NAMESPACE}" rollout status statefulset/rabbitmq --timeout=600s; then
+  # a causa quase nunca esta no rollout: ou o PVC nao foi provisionado (driver
+  # EBS sem permissao no LabRole), ou o pod nao agenda (volume preso na AZ de
+  # outro no). Os dois aparecem aqui.
+  kubectl -n "${NAMESPACE}" get pvc,pod -l app.kubernetes.io/name=rabbitmq || true
+  kubectl get pv || true
+  kubectl -n "${NAMESPACE}" describe pod rabbitmq-0 | tail -40 || true
+  kubectl -n "${NAMESPACE}" logs rabbitmq-0 --tail=50 || true
+  die "RabbitMQ nao ficou pronto. PVC em Pending => o driver EBS nao conseguiu criar o volume."
+fi
 kubectl apply -k "${INFRA_DIR}/k8s/apps/overlays/aws"
 log "aguardando o videodb no RDS e os servicos..."
 kubectl -n "${NAMESPACE}" wait --for=condition=complete job/create-videodb --timeout=300s
