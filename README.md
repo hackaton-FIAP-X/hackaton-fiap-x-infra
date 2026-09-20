@@ -146,6 +146,17 @@ export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
   balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC. Também
   apaga os PVCs do namespace antes do destroy, para nenhum disco ficar órfão.
 
+### Apresentar o ambiente (APR)
+
+```bash
+./scripts/metricas.sh             # painel: HPA, métricas do worker, filas e último teste de carga
+./scripts/metricas.sh --grafana   # o mesmo + Grafana e Prometheus no navegador
+./scripts/demo-carga.sh           # dispara o pico e mostra o HPA escalando (UPLOADS=300 para ver escalar)
+```
+
+O painel lê o Prometheus do cluster e o último `summary.json` de `docs/load/`,
+então serve para gravar a demonstração sem precisar rodar o teste de carga ao vivo.
+
 ### Testar o Terraform sem AWS (Floci)
 
 ```bash
