@@ -1,0 +1,29 @@
+== kubectl -n fiapx get hpa
+NAME              REFERENCE                    TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+video-processor   Deployment/video-processor   cpu: 49%/70%   2         10        2          21h
+video-service     Deployment/video-service     cpu: 22%/70%   2         8         2          17m
+
+== kubectl -n fiapx get pods
+NAME                              READY   STATUS    RESTARTS   AGE    IP              NODE                            NO
+auth-service-5cd55c5f7-q4l98      1/1     Running   0          20m    10.40.145.50    ip-10-40-147-76.ec2.internal    <n
+grafana-7dd5dbb649-pdvx4          1/1     Running   0          100m   10.40.148.75    ip-10-40-147-76.ec2.internal    <n
+mailhog-5688b94664-559p6          1/1     Running   0          100m   10.40.159.186   ip-10-40-147-76.ec2.internal    <n
+prometheus-6b477b8bb7-7pl9v       1/1     Running   0          100m   10.40.154.74    ip-10-40-147-76.ec2.internal    <n
+rabbitmq-0                        1/1     Running   0          20m    10.40.159.96    ip-10-40-147-76.ec2.internal    <n
+video-processor-ff8d8899f-6bz84   1/1     Running   0          20m    10.40.158.62    ip-10-40-147-76.ec2.internal    <n
+video-processor-ff8d8899f-7drrh   1/1     Running   0          18m    10.40.155.31    ip-10-40-145-103.ec2.internal   <n
+video-service-86c7954cb5-4dw4s    1/1     Running   0          19m    10.40.132.109   ip-10-40-130-9.ec2.internal     <n
+video-service-86c7954cb5-mpf6n    1/1     Running   0          20m    10.40.155.127   ip-10-40-145-103.ec2.internal   <n
+
+== filas (rabbitmqctl list_queues)
+name	messages	consumers
+video.processing.dlq	1	0
+video.status.dlq	0	0
+video.processing	0	2
+video.status	0	4
+
+== nos do EKS
+NAME                            STATUS   ROLES    AGE    VERSION
+ip-10-40-130-9.ec2.internal     Ready    <none>   103m   v1.31.14-eks-a887778
+ip-10-40-145-103.ec2.internal   Ready    <none>   99m    v1.31.14-eks-a887778
+ip-10-40-147-76.ec2.internal    Ready    <none>   101m   v1.31.14-eks-a887778

@@ -1,0 +1,32 @@
+     ✗ upload -> 202
+      ↳  99% — ✓ 299 / ✗ 1
+     ✗ upload devolve videoId
+      ↳  99% — ✓ 299 / ✗ 1
+
+     █ teardown
+
+       ✓ 300 enviados = 300 persistidos
+       ✓ 300 enviados = 300 processados
+
+     checks.........................: 99.66% ✓ 600      ✗ 2    
+     data_received..................: 220 kB 3.6 kB/s
+     data_sent......................: 4.6 MB 75 kB/s
+     http_req_blocked...............: avg=265.05ms min=1.9µs    med=255.78ms max=2.55s    p(90)=348.73ms p(95)=350.57ms
+     http_req_connecting............: avg=264.88ms min=0s       med=255.67ms max=2.55s    p(90)=348.64ms p(95)=350.34ms
+     http_req_duration..............: avg=4.2s     min=172.74ms med=4.47s    max=59.37s   p(90)=6.02s    p(95)=6.08s   
+       { expected_response:true }...: avg=4.02s    min=172.74ms med=4.47s    max=6.21s    p(90)=6.02s    p(95)=6.08s   
+     ✓ { name:upload }..............: avg=4.27s    min=653.2ms  med=4.5s     max=59.37s   p(90)=6.02s    p(95)=6.08s   
+     http_req_failed................: 0.32%  ✓ 1        ✗ 304  
+     http_req_receiving.............: avg=2.99ms   min=0s       med=277.52µs max=146.03ms p(90)=6.03ms   p(95)=17.11ms 
+     http_req_sending...............: avg=195.67µs min=31.27µs  med=147.12µs max=1.03ms   p(90)=376.04µs p(95)=503.64µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=4.2s     min=169.33ms med=4.47s    max=59.37s   p(90)=6.02s    p(95)=6.08s   
+     http_reqs......................: 305    4.970127/s
+     iteration_duration.............: avg=4.51s    min=794.82ms med=4.73s    max=1m0s     p(90)=6.29s    p(95)=6.35s   
+     iterations.....................: 300    4.888649/s
+   ✓ requests_lost..................: 0      0/s
+     uploads_accepted...............: 299    4.872354/s
+   ✗ uploads_rejected...............: 1      0.016295/s
+   ✓ videos_not_completed...........: 0      0/s
+     vus............................: 0      min=0      max=300
+     vus_max........................: 300    min=300    max=300

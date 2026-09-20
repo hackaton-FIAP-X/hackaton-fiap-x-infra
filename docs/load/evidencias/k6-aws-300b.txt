@@ -1,0 +1,236 @@
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+     execution: local
+        script: k6/upload-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 300 max VUs, 5m30s max duration (incl. graceful stop):
+              * pico_de_uploads: 1 iterations for each of 300 VUs (maxDuration: 5m0s, gracefulStop: 30s)
+
+time="2026-09-20T15:03:18-03:00" level=info msg="usuario k6-1789927397741-281377@fiapx.local | 300 uploads simultaneos em http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com" source=console
+
+running (0m01.0s), 300/300 VUs, 0 complete and 0 interrupted iterations
+pico_de_uploads   [   0% ] 300 VUs  0m00.1s/5m0s  000/300 iters, 1 per VU
+
+running (0m02.0s), 290/300 VUs, 10 complete and 0 interrupted iterations
+pico_de_uploads   [   3% ] 300 VUs  0m01.1s/5m0s  010/300 iters, 1 per VU
+
+running (0m03.0s), 248/300 VUs, 52 complete and 0 interrupted iterations
+pico_de_uploads   [  17% ] 300 VUs  0m02.1s/5m0s  052/300 iters, 1 per VU
+
+running (0m04.0s), 224/300 VUs, 76 complete and 0 interrupted iterations
+pico_de_uploads   [  25% ] 300 VUs  0m03.1s/5m0s  076/300 iters, 1 per VU
+
+running (0m05.0s), 182/300 VUs, 118 complete and 0 interrupted iterations
+pico_de_uploads   [  39% ] 300 VUs  0m04.1s/5m0s  118/300 iters, 1 per VU
+
+running (0m06.0s), 145/300 VUs, 155 complete and 0 interrupted iterations
+pico_de_uploads   [  52% ] 300 VUs  0m05.1s/5m0s  155/300 iters, 1 per VU
+
+running (0m07.0s), 070/300 VUs, 230 complete and 0 interrupted iterations
+pico_de_uploads   [  77% ] 300 VUs  0m06.1s/5m0s  230/300 iters, 1 per VU
+
+running (0m08.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m07.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m09.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m08.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m10.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m09.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m11.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m10.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m12.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m11.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m13.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m12.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m14.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m13.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m15.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m14.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m16.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m15.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m17.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m16.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m18.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m17.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m19.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m18.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m20.0s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m19.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m20.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m20.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m21.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m21.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m22.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m22.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m23.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m23.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m24.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m24.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m25.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m25.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m26.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m26.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m27.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m27.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m28.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m28.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m29.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m29.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m30.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m30.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m31.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m31.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m32.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m32.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m33.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m33.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m34.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m34.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m35.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m35.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m36.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m36.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m37.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m37.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m38.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m38.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m39.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m39.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m40.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m40.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m41.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m41.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m42.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m42.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m43.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m43.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m44.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m44.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m45.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m45.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m46.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m46.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m47.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m47.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m48.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m48.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m49.7s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m49.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m50.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m50.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m51.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m51.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m52.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m52.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m53.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m53.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m54.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m54.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m55.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m55.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m56.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m56.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m57.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m57.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m58.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m58.1s/5m0s  299/300 iters, 1 per VU
+
+running (0m59.5s), 001/300 VUs, 299 complete and 0 interrupted iterations
+pico_de_uploads   [ 100% ] 300 VUs  0m59.1s/5m0s  299/300 iters, 1 per VU
+time="2026-09-20T15:04:18-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:04:18-03:00" level=error msg="upload VU 2 recusado: 0 null" source=console
+
+running (1m00.5s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.0s/5m0s  300/300 iters, 1 per VU
+time="2026-09-20T15:04:19-03:00" level=info msg="persistidos: 300/300 | status: {\"COMPLETED\":300}" source=console
+     ✗ upload -> 202
+      ↳  99% — ✓ 299 / ✗ 1
+     ✗ upload devolve videoId
+      ↳  99% — ✓ 299 / ✗ 1
+
+     █ teardown
+
+       ✓ 300 enviados = 300 persistidos
+       ✓ 300 enviados = 300 processados
+
+     checks.........................: 99.66% ✓ 600      ✗ 2    
+     data_received..................: 220 kB 3.6 kB/s
+     data_sent......................: 4.6 MB 75 kB/s
+     http_req_blocked...............: avg=265.05ms min=1.9µs    med=255.78ms max=2.55s    p(90)=348.73ms p(95)=350.57ms
+     http_req_connecting............: avg=264.88ms min=0s       med=255.67ms max=2.55s    p(90)=348.64ms p(95)=350.34ms
+     http_req_duration..............: avg=4.2s     min=172.74ms med=4.47s    max=59.37s   p(90)=6.02s    p(95)=6.08s   
+       { expected_response:true }...: avg=4.02s    min=172.74ms med=4.47s    max=6.21s    p(90)=6.02s    p(95)=6.08s   
+     ✓ { name:upload }..............: avg=4.27s    min=653.2ms  med=4.5s     max=59.37s   p(90)=6.02s    p(95)=6.08s   
+     http_req_failed................: 0.32%  ✓ 1        ✗ 304  
+     http_req_receiving.............: avg=2.99ms   min=0s       med=277.52µs max=146.03ms p(90)=6.03ms   p(95)=17.11ms 
+     http_req_sending...............: avg=195.67µs min=31.27µs  med=147.12µs max=1.03ms   p(90)=376.04µs p(95)=503.64µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=4.2s     min=169.33ms med=4.47s    max=59.37s   p(90)=6.02s    p(95)=6.08s   
+     http_reqs......................: 305    4.970127/s
+     iteration_duration.............: avg=4.51s    min=794.82ms med=4.73s    max=1m0s     p(90)=6.29s    p(95)=6.35s   
+     iterations.....................: 300    4.888649/s
+   ✓ requests_lost..................: 0      0/s
+     uploads_accepted...............: 299    4.872354/s
+   ✗ uploads_rejected...............: 1      0.016295/s
+   ✓ videos_not_completed...........: 0      0/s
+     vus............................: 0      min=0      max=300
+     vus_max........................: 300    min=300    max=300
+running (1m01.4s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.0s/5m0s  300/300 iters, 1 per VU
+time="2026-09-20T15:04:20-03:00" level=error msg="thresholds on metrics 'uploads_rejected' have been crossed"
