@@ -17,6 +17,15 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 require docker
 
+# Este script SEMPRE produz <registry local>/<svc>:local — e dessas imagens que o
+# push-images.sh parte para publicar com a tag final. Ignora IMAGE_TAG e
+# IMAGE_REGISTRY herdados do ambiente: o aws-up.sh exporta a tag do ECR, e sem
+# isso o build sairia com outro nome e o push falharia ("imagem ... nao existe").
+# shellcheck disable=SC2034  # lidas por image_for(), definida no lib.sh
+IMAGE_REGISTRY="${LOCAL_IMAGE_REGISTRY}"
+# shellcheck disable=SC2034  # idem
+IMAGE_TAG="local"
+
 MAVEN_IMAGE="${MAVEN_IMAGE:-maven:3.9-eclipse-temurin-21}"
 COMMONS_DIR="${WORKSPACE_DIR}/auth-service/security-commons"
 TMP="$(mktemp -d)"
