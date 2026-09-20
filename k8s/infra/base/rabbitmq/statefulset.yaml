@@ -24,9 +24,32 @@ spec:
     spec:
       securityContext:
         fsGroup: 999
+        # Sem isso o kubelet reaplica o grupo em TODO o volume a cada mount e
+        # devolve permissao de grupo ao .erlang.cookie; o Erlang so aceita o
+        # cookie acessivel pelo dono ("must be accessible by owner only") e o
+        # RabbitMQ nao sobe. So aparece em volume que sobrevive ao pod (EBS).
+        fsGroupChangePolicy: OnRootMismatch
         runAsUser: 999
         runAsGroup: 999
         runAsNonRoot: true
+      initContainers:
+        # conserta o cookie de volumes que ja ficaram com a permissao errada
+        - name: erlang-cookie-perms
+          image: rabbitmq:3.13-management-alpine
+          command:
+            - sh
+            - -c
+            - 'if [ -f /var/lib/rabbitmq/.erlang.cookie ]; then chmod 400 /var/lib/rabbitmq/.erlang.cookie; fi'
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
       containers:
         - name: rabbitmq
           image: rabbitmq:3.13-management-alpine
