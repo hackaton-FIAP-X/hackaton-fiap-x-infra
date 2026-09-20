@@ -36,9 +36,9 @@ variable "node_instance_type" {
 }
 
 variable "node_count" {
-  description = "Nos do node group (min = desired). O maximo e o dobro, para o HPA ter para onde crescer."
+  description = "Nos do node group (min = desired). O maximo e o dobro, para o HPA ter para onde crescer. 3 nos: com 2 o RabbitMQ nao cabia no no da AZ do volume EBS dele."
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "db_instance_class" {
