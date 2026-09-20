@@ -187,6 +187,13 @@ jobs:
 
       - name: Diagnostico em caso de falha
         if: failure()
+        # o kubeconfig do EKS chama o aws CLI: sem as credenciais aqui, o
+        # diagnostico so imprime "Unable to locate credentials".
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           kubectl get pods -A -o wide || true
           kubectl -n fiapx get events --sort-by=.lastTimestamp | tail -40 || true
