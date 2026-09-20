@@ -74,19 +74,21 @@ else
   warn "PULADO - HPA não aplicado (rode ./scripts/deploy-apps.sh)"
 fi
 
+# Na AWS e a URL do NLB; local, o Ingress do kind na porta 80.
+BASE="${BASE_URL:-http://localhost}"
+
 if kubectl -n "${NAMESPACE}" get ingress fiapx >/dev/null 2>&1; then
   check "Ingress roteia /auth e /videos" \
     "kubectl -n ${NAMESPACE} get ingress fiapx -o jsonpath='{.spec.rules[*].http.paths[*].path}' | grep -q '/auth' && kubectl -n ${NAMESPACE} get ingress fiapx -o jsonpath='{.spec.rules[*].http.paths[*].path}' | grep -q '/videos'"
   # /auth e repassado sem reescrever o prefixo, entao o actuator nao fica em
   # /auth/actuator; a JWKS publica e a rota mais barata para provar o roteamento.
   check "Ingress roteia ate o auth-service (GET /.well-known/jwks.json -> 200)" \
-    "[ \"\$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://localhost/.well-known/jwks.json)\" = 200 ]"
+    "[ \"\$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 ${BASE}/.well-known/jwks.json)\" = 200 ]"
 else
   warn "PULADO - Ingress não aplicado (rode ./scripts/deploy-ingress.sh)"
 fi
 
 log "== auth-service: register, login, JWKS e rate limit (via Ingress) =="
-BASE="${BASE_URL:-http://localhost}"
 if curl -s -o /dev/null --max-time 5 "${BASE}/auth/login"; then
   EMAIL="verify-$(date +%s)-${RANDOM}@fiapx.local"
   PASS="verify-Pass-123"
