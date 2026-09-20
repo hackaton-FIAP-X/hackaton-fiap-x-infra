@@ -11,6 +11,7 @@ resources:
   - video-service/configmap.yaml
   - video-service/service.yaml
   - video-service/deployment.yaml
+  - video-service/hpa.yaml
   - video-processor/configmap.yaml
   - video-processor/service.yaml
   - video-processor/deployment.yaml

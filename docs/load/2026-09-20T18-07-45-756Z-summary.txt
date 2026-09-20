@@ -1,0 +1,34 @@
+     ✗ upload -> 202
+      ↳  86% — ✓ 260 / ✗ 40
+     ✗ upload devolve videoId
+      ↳  86% — ✓ 260 / ✗ 40
+
+     █ teardown
+
+       ✗ 300 enviados = 295 persistidos
+        ↳  0% — ✓ 0 / ✗ 1
+       ✗ 300 enviados = 295 processados
+        ↳  0% — ✓ 0 / ✗ 1
+
+     checks.........................: 86.37% ✓ 520      ✗ 82   
+     data_received..................: 200 kB 3.2 kB/s
+     data_sent......................: 4.6 MB 73 kB/s
+     http_req_blocked...............: avg=535.78ms min=2.84µs   med=281.45ms max=3.54s    p(90)=2.38s    p(95)=2.48s   
+     http_req_connecting............: avg=535.28ms min=0s       med=281.32ms max=3.54s    p(90)=2.38s    p(95)=2.48s   
+     http_req_duration..............: avg=11.47s   min=197.89ms med=9.09s    max=59.38s   p(90)=31.13s   p(95)=59.21s  
+       { expected_response:true }...: avg=6.83s    min=197.89ms med=6.03s    max=11.79s   p(90)=11.33s   p(95)=11.45s  
+     ✓ { name:upload }..............: avg=11.65s   min=456.69ms med=9.3s     max=59.38s   p(90)=31.13s   p(95)=59.21s  
+     http_req_failed................: 13.11% ✓ 40       ✗ 265  
+     http_req_receiving.............: avg=4.46ms   min=0s       med=395.05µs max=169.47ms p(90)=5.53ms   p(95)=17.59ms 
+     http_req_sending...............: avg=177.46µs min=27.5µs   med=147.64µs max=721.47µs p(90)=326.32µs p(95)=392.95µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=11.46s   min=197.33ms med=9.09s    max=59.38s   p(90)=31.13s   p(95)=59.21s  
+     http_reqs......................: 305    4.840871/s
+     iteration_duration.............: avg=12.17s   min=552.12ms med=10.37s   max=1m0s     p(90)=31.65s   p(95)=1m0s    
+     iterations.....................: 300    4.761512/s
+   ✗ requests_lost..................: 5      0.079359/s
+     uploads_accepted...............: 260    4.126644/s
+   ✗ uploads_rejected...............: 40     0.634868/s
+   ✗ videos_not_completed...........: 5      0.079359/s
+     vus............................: 0      min=0      max=300
+     vus_max........................: 300    min=300    max=300

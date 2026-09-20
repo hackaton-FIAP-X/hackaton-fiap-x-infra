@@ -1,0 +1,30 @@
+     ✓ upload -> 202
+     ✓ upload devolve videoId
+
+     █ teardown
+
+       ✓ 300 enviados = 300 persistidos
+       ✓ 300 enviados = 300 processados
+
+     checks.........................: 100.00% ✓ 602      ✗ 0    
+     data_received..................: 600 kB  18 kB/s
+     data_sent......................: 4.6 MB  137 kB/s
+     http_req_blocked...............: avg=235.57ms min=1.92µs   med=230.23ms max=364.38ms p(90)=324.93ms p(95)=342.62ms
+     http_req_connecting............: avg=235.25ms min=0s       med=230.07ms max=364.06ms p(90)=318.6ms  p(95)=342.56ms
+     http_req_duration..............: avg=2.32s    min=150.73ms med=2.41s    max=4.21s    p(90)=3.8s     p(95)=3.95s   
+       { expected_response:true }...: avg=2.32s    min=150.73ms med=2.41s    max=4.21s    p(90)=3.8s     p(95)=3.95s   
+     ✓ { name:upload }..............: avg=2.46s    min=616.98ms med=2.51s    max=4.21s    p(90)=3.81s    p(95)=3.95s   
+     http_req_failed................: 0.00%   ✓ 0        ✗ 320  
+     http_req_receiving.............: avg=3.93ms   min=33.72µs  med=290.33µs max=141.54ms p(90)=2.48ms   p(95)=10.46ms 
+     http_req_sending...............: avg=200.81µs min=24.84µs  med=131.99µs max=2.39ms   p(90)=444.17µs p(95)=547.29µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=2.32s    min=149.15ms med=2.4s     max=4.21s    p(90)=3.8s     p(95)=3.94s   
+     http_reqs......................: 320     9.452755/s
+     iteration_duration.............: avg=2.79s    min=571.08ms med=2.74s    max=28.99s   p(90)=4.1s     p(95)=4.23s   
+     iterations.....................: 300     8.861957/s
+   ✓ requests_lost..................: 0       0/s
+     uploads_accepted...............: 300     8.861957/s
+   ✓ uploads_rejected...............: 0       0/s
+   ✓ videos_not_completed...........: 0       0/s
+     vus............................: 0       min=0      max=300
+     vus_max........................: 300     min=300    max=300

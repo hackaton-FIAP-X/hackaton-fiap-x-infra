@@ -1,0 +1,322 @@
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+     execution: local
+        script: k6/upload-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 300 max VUs, 5m30s max duration (incl. graceful stop):
+              * pico_de_uploads: 1 iterations for each of 300 VUs (maxDuration: 5m0s, gracefulStop: 30s)
+
+time="2026-09-20T15:06:43-03:00" level=info msg="usuario k6-1789927602751-412443@fiapx.local | 300 uploads simultaneos em http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com" source=console
+
+running (0m01.0s), 300/300 VUs, 0 complete and 0 interrupted iterations
+pico_de_uploads   [   0% ] 300 VUs  0m00.4s/5m0s  000/300 iters, 1 per VU
+time="2026-09-20T15:06:44-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46524->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:06:44-03:00" level=error msg="upload VU 136 recusado: 0 null" source=console
+time="2026-09-20T15:06:44-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46496->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:06:44-03:00" level=error msg="upload VU 118 recusado: 0 null" source=console
+time="2026-09-20T15:06:44-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46512->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:06:44-03:00" level=error msg="upload VU 131 recusado: 0 null" source=console
+
+running (0m02.0s), 297/300 VUs, 3 complete and 0 interrupted iterations
+pico_de_uploads   [   1% ] 300 VUs  0m01.4s/5m0s  003/300 iters, 1 per VU
+
+running (0m03.0s), 280/300 VUs, 20 complete and 0 interrupted iterations
+pico_de_uploads   [   7% ] 300 VUs  0m02.4s/5m0s  020/300 iters, 1 per VU
+
+running (0m04.0s), 253/300 VUs, 47 complete and 0 interrupted iterations
+pico_de_uploads   [  16% ] 300 VUs  0m03.4s/5m0s  047/300 iters, 1 per VU
+
+running (0m05.0s), 221/300 VUs, 79 complete and 0 interrupted iterations
+pico_de_uploads   [  26% ] 300 VUs  0m04.4s/5m0s  079/300 iters, 1 per VU
+
+running (0m06.0s), 171/300 VUs, 129 complete and 0 interrupted iterations
+pico_de_uploads   [  43% ] 300 VUs  0m05.4s/5m0s  129/300 iters, 1 per VU
+
+running (0m07.0s), 171/300 VUs, 129 complete and 0 interrupted iterations
+pico_de_uploads   [  43% ] 300 VUs  0m06.4s/5m0s  129/300 iters, 1 per VU
+
+running (0m08.0s), 171/300 VUs, 129 complete and 0 interrupted iterations
+pico_de_uploads   [  43% ] 300 VUs  0m07.4s/5m0s  129/300 iters, 1 per VU
+
+running (0m09.0s), 171/300 VUs, 129 complete and 0 interrupted iterations
+pico_de_uploads   [  43% ] 300 VUs  0m08.4s/5m0s  129/300 iters, 1 per VU
+
+running (0m10.0s), 165/300 VUs, 135 complete and 0 interrupted iterations
+pico_de_uploads   [  45% ] 300 VUs  0m09.4s/5m0s  135/300 iters, 1 per VU
+
+running (0m11.0s), 151/300 VUs, 149 complete and 0 interrupted iterations
+pico_de_uploads   [  50% ] 300 VUs  0m10.4s/5m0s  149/300 iters, 1 per VU
+
+running (0m12.0s), 084/300 VUs, 216 complete and 0 interrupted iterations
+pico_de_uploads   [  72% ] 300 VUs  0m11.4s/5m0s  216/300 iters, 1 per VU
+
+running (0m13.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m12.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m14.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m13.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m15.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m14.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m16.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m15.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m17.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m16.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m18.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m17.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m19.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m18.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m20.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m19.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m21.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m20.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m22.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m21.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m23.0s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m22.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m23.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m23.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m24.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m24.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m25.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m25.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m26.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m26.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m27.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m27.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m28.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m28.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m29.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m29.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m30.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m30.4s/5m0s  263/300 iters, 1 per VU
+
+running (0m31.7s), 037/300 VUs, 263 complete and 0 interrupted iterations
+pico_de_uploads   [  88% ] 300 VUs  0m31.4s/5m0s  263/300 iters, 1 per VU
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46352->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46184->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 98 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 190 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46232->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 184 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46856->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46078->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 179 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46052->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 108 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 171 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46736->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 208 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46756->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46168->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 154 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 214 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46376->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 82 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46642->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46722->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 132 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 7 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46818->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 176 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46792->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 195 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46854->3.216.234.111:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 35 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46822->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 219 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46888->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 296 recusado: 0 null" source=console
+time="2026-09-20T15:07:14-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": read tcp 192.168.15.6:46876->100.61.80.187:80: read: connection reset by peer"
+time="2026-09-20T15:07:14-03:00" level=error msg="upload VU 17 recusado: 0 null" source=console
+
+running (0m32.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m32.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m33.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m33.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m34.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m34.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m35.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m35.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m36.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m36.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m37.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m37.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m38.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m38.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m39.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m39.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m40.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m40.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m41.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m41.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m42.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m42.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m43.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m43.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m44.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m44.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m45.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m45.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m46.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m46.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m47.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m47.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m48.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m48.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m49.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m49.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m50.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m50.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m51.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m51.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m52.7s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m52.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m53.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m53.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m54.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m54.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m55.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m55.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m56.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m56.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m57.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m57.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m58.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m58.4s/5m0s  281/300 iters, 1 per VU
+
+running (0m59.5s), 019/300 VUs, 281 complete and 0 interrupted iterations
+pico_de_uploads   [  94% ] 300 VUs  0m59.4s/5m0s  281/300 iters, 1 per VU
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 99 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 87 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 52 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 86 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 65 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 161 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 5 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 84 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 54 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 13 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 164 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 271 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 177 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 73 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 239 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 19 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 45 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=warning msg="Request Failed" error="Post \"http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com/videos\": request timeout"
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 235 recusado: 0 null" source=console
+time="2026-09-20T15:07:42-03:00" level=error msg="upload VU 295 recusado: 0 null" source=console
+
+running (1m00.5s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.1s/5m0s  300/300 iters, 1 per VU
+
+running (1m01.5s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.1s/5m0s  300/300 iters, 1 per VU
+
+running (1m02.5s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.1s/5m0s  300/300 iters, 1 per VU
+time="2026-09-20T15:07:45-03:00" level=info msg="persistidos: 295/300 | status: {\"COMPLETED\":295}" source=console
+     ✗ upload -> 202
+      ↳  86% — ✓ 260 / ✗ 40
+     ✗ upload devolve videoId
+      ↳  86% — ✓ 260 / ✗ 40
+
+     █ teardown
+
+       ✗ 300 enviados = 295 persistidos
+        ↳  0% — ✓ 0 / ✗ 1
+       ✗ 300 enviados = 295 processados
+        ↳  0% — ✓ 0 / ✗ 1
+
+     checks.........................: 86.37% ✓ 520      ✗ 82   
+     data_received..................: 200 kB 3.2 kB/s
+     data_sent......................: 4.6 MB 73 kB/s
+     http_req_blocked...............: avg=535.78ms min=2.84µs   med=281.45ms max=3.54s    p(90)=2.38s    p(95)=2.48s   
+     http_req_connecting............: avg=535.28ms min=0s       med=281.32ms max=3.54s    p(90)=2.38s    p(95)=2.48s   
+     http_req_duration..............: avg=11.47s   min=197.89ms med=9.09s    max=59.38s   p(90)=31.13s   p(95)=59.21s  
+       { expected_response:true }...: avg=6.83s    min=197.89ms med=6.03s    max=11.79s   p(90)=11.33s   p(95)=11.45s  
+     ✓ { name:upload }..............: avg=11.65s   min=456.69ms med=9.3s     max=59.38s   p(90)=31.13s   p(95)=59.21s  
+     http_req_failed................: 13.11% ✓ 40       ✗ 265  
+     http_req_receiving.............: avg=4.46ms   min=0s       med=395.05µs max=169.47ms p(90)=5.53ms   p(95)=17.59ms 
+     http_req_sending...............: avg=177.46µs min=27.5µs   med=147.64µs max=721.47µs p(90)=326.32µs p(95)=392.95µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=11.46s   min=197.33ms med=9.09s    max=59.38s   p(90)=31.13s   p(95)=59.21s  
+     http_reqs......................: 305    4.840871/s
+     iteration_duration.............: avg=12.17s   min=552.12ms med=10.37s   max=1m0s     p(90)=31.65s   p(95)=1m0s    
+     iterations.....................: 300    4.761512/s
+   ✗ requests_lost..................: 5      0.079359/s
+     uploads_accepted...............: 260    4.126644/s
+   ✗ uploads_rejected...............: 40     0.634868/s
+   ✗ videos_not_completed...........: 5      0.079359/s
+     vus............................: 0      min=0      max=300
+     vus_max........................: 300    min=300    max=300
+running (1m03.0s), 000/300 VUs, 300 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 300 VUs  1m00.1s/5m0s  300/300 iters, 1 per VU
+time="2026-09-20T15:07:46-03:00" level=error msg="thresholds on metrics 'requests_lost, uploads_rejected, videos_not_completed' have been crossed"

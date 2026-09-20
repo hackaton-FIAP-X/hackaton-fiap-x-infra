@@ -100,11 +100,22 @@ export default function (data) {
   }
 }
 
+// A API limita a pagina a 100 itens (VideoQueryService.MAX_PAGE_SIZE), entao
+// acima disso e preciso varrer as paginas — senao um teste com 300 uploads
+// acusaria 200 "perdidos" que na verdade so estavam na pagina seguinte.
+const PAGE_SIZE = 100;
+
 function listAll(token) {
-  const res = http.get(`${BASE_URL}/videos?size=${Math.max(UPLOADS * 2, 100)}`,
-    { headers: { Authorization: `Bearer ${token}` }, tags: { name: 'list' } });
-  if (res.status !== 200) fail(`listagem falhou: ${res.status} ${res.body}`);
-  return json(res).content;
+  const headers = { Authorization: `Bearer ${token}` };
+  const all = [];
+  for (let page = 0; ; page++) {
+    const res = http.get(`${BASE_URL}/videos?page=${page}&size=${PAGE_SIZE}`,
+      { headers, tags: { name: 'list' } });
+    if (res.status !== 200) fail(`listagem falhou: ${res.status} ${res.body}`);
+    const body = json(res);
+    all.push(...body.content);
+    if (page + 1 >= body.totalPages || body.content.length === 0) return all;
+  }
 }
 
 export function teardown(data) {
