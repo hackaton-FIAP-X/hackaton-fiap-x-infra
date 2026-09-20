@@ -32,24 +32,6 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         runAsNonRoot: true
-      initContainers:
-        # conserta o cookie de volumes que ja ficaram com a permissao errada
-        - name: erlang-cookie-perms
-          image: rabbitmq:3.13-management-alpine
-          command:
-            - sh
-            - -c
-            - 'if [ -f /var/lib/rabbitmq/.erlang.cookie ]; then chmod 400 /var/lib/rabbitmq/.erlang.cookie; fi'
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/rabbitmq
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
       containers:
         - name: rabbitmq
           image: rabbitmq:3.13-management-alpine
@@ -61,6 +43,13 @@ spec:
             - name: metrics
               containerPort: 15692
           env:
+            # O cookie do Erlang mora no HOME. Deixando o HOME num emptyDir, ele
+            # nasce a cada start com a permissao certa (400) e nunca e tocado
+            # pelo fsGroup do volume persistente — era isso que derrubava o
+            # RabbitMQ no EBS ("cookie file must be accessible by owner only").
+            # Os dados (mnesia) continuam no volume `data`, entao nada se perde.
+            - name: HOME
+              value: /home/rabbitmq
             - name: RABBITMQ_DEFAULT_USER
               valueFrom:
                 secretKeyRef:
@@ -74,6 +63,8 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/rabbitmq
+            - name: home
+              mountPath: /home/rabbitmq
           readinessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "-q", "check_port_connectivity"]
@@ -93,6 +84,9 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+      volumes:
+        - name: home
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data
