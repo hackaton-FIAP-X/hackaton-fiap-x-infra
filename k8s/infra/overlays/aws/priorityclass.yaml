@@ -1,0 +1,11 @@
+# O RabbitMQ so pode rodar no no que esta na AZ do volume EBS dele. Se esse no
+# encher, ele fica Pending para sempre ("Insufficient cpu" + "volume node
+# affinity conflict"), e sem mensageria nada funciona. Com prioridade acima da
+# dos apps, o scheduler tira um pod de app do no para abrir espaco.
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: fiapx-infra
+value: 100000
+globalDefault: false
+description: "Infra de apoio no cluster (RabbitMQ): tem precedencia sobre os apps"

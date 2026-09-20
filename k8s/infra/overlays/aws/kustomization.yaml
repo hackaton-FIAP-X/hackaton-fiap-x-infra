@@ -7,6 +7,7 @@ kind: Kustomization
 namespace: fiapx
 
 resources:
+  - priorityclass.yaml
   - storageclass-gp3.yaml
   - ../../base/rabbitmq
   - ../../base/mailhog
@@ -19,6 +20,9 @@ patches:
       - op: add
         path: /spec/volumeClaimTemplates/0/spec/storageClassName
         value: gp3
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: fiapx-infra
 
 secretGenerator:
   - name: infra-credentials
