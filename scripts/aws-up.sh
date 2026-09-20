@@ -52,9 +52,18 @@ PROVIDER=aws "${INFRA_DIR}/scripts/deploy-addons.sh"
 
 kubectl apply -f "${INFRA_DIR}/k8s/namespace.yaml"
 kubectl -n "${NAMESPACE}" delete job create-videodb --ignore-not-found >/dev/null
+# O StatefulSet nao aceita mudar volumeClaimTemplates: o RabbitMQ que ficou do
+# tempo do volume EBS precisa ser recriado para passar ao disco efemero. Roda
+# uma vez so; depois nao ha mais volumeClaimTemplates para casar.
+if kubectl -n "${NAMESPACE}" get statefulset rabbitmq \
+     -o jsonpath='{.spec.volumeClaimTemplates[*].metadata.name}' 2>/dev/null | grep -q .; then
+  log "recriando o RabbitMQ sem o volume EBS (ver k8s/infra/overlays/aws)"
+  kubectl -n "${NAMESPACE}" delete statefulset rabbitmq --wait=true --timeout=120s || true
+  kubectl -n "${NAMESPACE}" delete pvc data-rabbitmq-0 --ignore-not-found --wait=false
+fi
 kubectl apply -k "${INFRA_DIR}/k8s/infra/overlays/aws"
 # os servicos declaram a topologia no RabbitMQ ao subir: ele vem antes
-log "aguardando o RabbitMQ (volume EBS novo leva ~1 min)..."
+log "aguardando o RabbitMQ..."
 if ! kubectl -n "${NAMESPACE}" rollout status statefulset/rabbitmq --timeout=600s; then
   # a causa quase nunca esta no rollout: ou o PVC nao foi provisionado (driver
   # EBS sem permissao no LabRole), ou o pod nao agenda (volume preso na AZ de
@@ -63,7 +72,7 @@ if ! kubectl -n "${NAMESPACE}" rollout status statefulset/rabbitmq --timeout=600
   kubectl get pv || true
   kubectl -n "${NAMESPACE}" describe pod rabbitmq-0 | tail -40 || true
   kubectl -n "${NAMESPACE}" logs rabbitmq-0 --tail=50 || true
-  die "RabbitMQ nao ficou pronto. PVC em Pending => o driver EBS nao conseguiu criar o volume."
+  die "RabbitMQ nao ficou pronto (veja o describe e os logs acima)."
 fi
 kubectl apply -k "${INFRA_DIR}/k8s/apps/overlays/aws"
 log "aguardando o videodb no RDS e os servicos..."

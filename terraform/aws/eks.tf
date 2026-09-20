@@ -70,9 +70,11 @@ resource "aws_eks_node_group" "main" {
   }
 }
 
-# Driver EBS CSI: provisiona o volume do RabbitMQ (StorageClass gp3 em
-# k8s/infra/overlays/aws). Sem IRSA no Learner Lab (nao da para criar IAM), o
-# controller usa as credenciais do no — o LabRole — pelo IMDS (hop limit 2 acima).
+# Driver EBS CSI: deixa o cluster capaz de provisionar volumes (StorageClass
+# gp3 em k8s/infra/overlays/aws). Hoje nada usa PVC na AWS — o RabbitMQ passou a
+# disco efemero —, mas o driver fica instalado para poder voltar atras. Sem IRSA
+# no Learner Lab (nao da para criar IAM), o controller usa as credenciais do
+# no — o LabRole — pelo IMDS (hop limit 2 acima).
 resource "aws_eks_addon" "ebs_csi" {
   count                       = var.enable_ebs_csi ? 1 : 0
   cluster_name                = aws_eks_cluster.main.name

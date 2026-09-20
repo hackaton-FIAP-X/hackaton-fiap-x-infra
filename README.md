@@ -78,16 +78,20 @@ que não permite criar IAM — o cluster e os nós usam o `LabRole` que já exis
 | **RDS Postgres 16** (`authdb` + `videodb`) | `data.tf` | StatefulSet Postgres |
 | **ElastiCache Redis 7** | `data.tf` | StatefulSet Redis |
 | **S3** (bucket criado pela CLI, ver abaixo) | `scripts/aws-lib.sh` | MinIO |
-| Driver **EBS CSI** (volume gp3 do RabbitMQ) | `eks.tf` | disco do kind |
+| Driver **EBS CSI** (StorageClass gp3, sem uso hoje) | `eks.tf` | disco do kind |
 
-No cluster ficam os serviços, o **RabbitMQ** (StatefulSet com volume EBS), Ingress
-NGINX (vira um NLB), metrics-server, Prometheus/Grafana e Mailhog.
+No cluster ficam os serviços, o **RabbitMQ** (StatefulSet com disco efêmero),
+Ingress NGINX (vira um NLB), metrics-server, Prometheus/Grafana e Mailhog.
 
 **Restrições do Learner Lab** que moldaram isso (ver ADR-002 no repo `docs`):
 
 - **Amazon MQ bloqueado** (`mq:CreateBroker` negado): o RabbitMQ roda no EKS, com
-  os mesmos manifests do kind e volume EBS gp3 para as mensagens sobreviverem a
-  restart do pod.
+  os mesmos manifests do kind. O volume EBS foi tentado e abandonado — o disco
+  vive numa única AZ e prende o pod a um nó, e o `fsGroup` do volume quebrava a
+  permissão do cookie do Erlang. Hoje o disco é **efêmero**: se o pod reiniciar,
+  as mensagens ainda em fila se perdem. O que já foi aceito não se perde, porque
+  o video-service grava no banco (outbox) antes de publicar e o video-processor
+  só confirma a mensagem depois de gravar o ZIP no S3.
 - **S3 via Terraform bloqueado:** o `aws_s3_bucket` do provider sempre lê a config
   de object lock, e o SCP do lab nega `s3:GetBucketObjectLockConfiguration`. O
   bucket da aplicação (`fiapx-app-<conta>-<região>`) é criado pela CLI, como o do
@@ -140,8 +144,7 @@ export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_SESSION_TOKEN=...
   git-ignored).
 - **`aws-down.sh`** apaga o NLB do Ingress antes do `terraform destroy`: um load
   balancer criado pelo Kubernetes fora do Terraform impediria apagar a VPC. Também
-  apaga o PVC do RabbitMQ enquanto o driver EBS ainda existe, para o disco não
-  ficar órfão.
+  apaga os PVCs do namespace antes do destroy, para nenhum disco ficar órfão.
 
 ### Testar o Terraform sem AWS (Floci)
 

@@ -2,13 +2,21 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Na AWS, Postgres, Redis e S3 sao gerenciados (terraform/aws). No cluster ficam
-# o RabbitMQ (o Learner Lab nega o Amazon MQ, ver ADR-002), com volume EBS gp3,
-# o Mailhog e o Secret infra-credentials (RabbitMQ e Grafana).
+# o RabbitMQ (o Learner Lab nega o Amazon MQ, ver ADR-002), o Mailhog e o Secret
+# infra-credentials (RabbitMQ e Grafana).
+#
+# RabbitMQ com disco EFEMERO (emptyDir): o volume EBS travou a subida duas vezes
+# (o pod so pode rodar no no da AZ do disco, e o fsGroup do volume quebrava a
+# permissao do cookie do Erlang). Troca consciente: se o pod reiniciar, as
+# mensagens ainda em fila se perdem. O que ja foi aceito nao se perde — o
+# video-service grava no banco (outbox) antes de publicar, e o video-processor
+# so da ack depois de gravar o ZIP no S3. A StorageClass gp3 e o driver EBS
+# continuam instalados, caso se queira voltar a persistir.
 namespace: fiapx
 
 resources:
   - priorityclass.yaml
-  - storageclass-gp3.yaml
+  - storageclass-gp3.yaml # sem uso hoje; fica pronta para voltar a persistir
   - ../../base/rabbitmq
   - ../../base/mailhog
 
@@ -17,9 +25,14 @@ patches:
       kind: StatefulSet
       name: rabbitmq
     patch: |-
+      - op: remove
+        path: /spec/volumeClaimTemplates
       - op: add
-        path: /spec/volumeClaimTemplates/0/spec/storageClassName
-        value: gp3
+        path: /spec/template/spec/volumes/-
+        value:
+          name: data
+          emptyDir:
+            sizeLimit: 2Gi
       - op: add
         path: /spec/template/spec/priorityClassName
         value: fiapx-infra
