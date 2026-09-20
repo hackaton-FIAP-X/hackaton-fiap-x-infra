@@ -1,0 +1,30 @@
+     ✓ upload -> 202
+     ✓ upload devolve videoId
+
+     █ teardown
+
+       ✓ 50 enviados = 50 persistidos
+       ✓ 50 enviados = 50 processados
+
+     checks.........................: 100.00% ✓ 102      ✗ 0   
+     data_received..................: 51 kB   5.7 kB/s
+     data_sent......................: 770 kB  87 kB/s
+     http_req_blocked...............: avg=158.21ms min=1.94µs   med=175.87ms max=178.37ms p(90)=177.71ms p(95)=178.04ms
+     http_req_connecting............: avg=157.84ms min=0s       med=175.74ms max=178.22ms p(90)=177.6ms  p(95)=177.97ms
+     http_req_duration..............: avg=1.39s    min=187.5ms  med=1.44s    max=2.37s    p(90)=2.05s    p(95)=2.06s   
+       { expected_response:true }...: avg=1.39s    min=187.5ms  med=1.44s    max=2.37s    p(90)=2.05s    p(95)=2.06s   
+     ✓ { name:upload }..............: avg=1.48s    min=730.13ms med=1.54s    max=2.37s    p(90)=2.06s    p(95)=2.06s   
+     http_req_failed................: 0.00%   ✓ 0        ✗ 54  
+     http_req_receiving.............: avg=5.9ms    min=42.44µs  med=251.53µs max=129.26ms p(90)=1.25ms   p(95)=16.27ms 
+     http_req_sending...............: avg=235.41µs min=31.88µs  med=170.99µs max=1.51ms   p(90)=471.09µs p(95)=513.14µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=1.38s    min=187.28ms med=1.44s    max=2.37s    p(90)=2.05s    p(95)=2.06s   
+     http_reqs......................: 54      6.076938/s
+     iteration_duration.............: avg=1.7s     min=533.39ms med=1.69s    max=5.79s    p(90)=2.21s    p(95)=2.23s   
+     iterations.....................: 50      5.626794/s
+   ✓ requests_lost..................: 0       0/s
+     uploads_accepted...............: 50      5.626794/s
+   ✓ uploads_rejected...............: 0       0/s
+   ✓ videos_not_completed...........: 0       0/s
+     vus............................: 0       min=0      max=50
+     vus_max........................: 50      min=50     max=50

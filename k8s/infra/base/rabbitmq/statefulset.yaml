@@ -65,18 +65,25 @@ spec:
               mountPath: /var/lib/rabbitmq
             - name: home
               mountPath: /home/rabbitmq
+          # Sondas propositalmente BARATAS e tolerantes. Medido com k6 (300 uploads
+          # simultaneos): sob CPU alta o `status` passava de 15s, a liveness
+          # falhava e o Kubernetes reiniciava o broker no meio do pico — com
+          # disco efemero, o que estava em fila ia junto. `ping` responde no
+          # proprio processo e nao coleta estatistica.
           readinessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "-q", "check_port_connectivity"]
             initialDelaySeconds: 15
             periodSeconds: 15
             timeoutSeconds: 10
+            failureThreshold: 6
           livenessProbe:
             exec:
-              command: ["rabbitmq-diagnostics", "-q", "status"]
+              command: ["rabbitmq-diagnostics", "-q", "ping"]
             initialDelaySeconds: 40
             periodSeconds: 30
             timeoutSeconds: 15
+            failureThreshold: 6
           resources:
             requests:
               cpu: 100m

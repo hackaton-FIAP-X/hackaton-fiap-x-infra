@@ -1,0 +1,43 @@
+# O upload e a porta de entrada: se ele saturar, a requisicao se perde antes de
+# virar mensagem na fila. Medido com k6 (docs/load/): com 2 replicas fixas e 300
+# uploads simultaneos, parte das requisicoes passava de 60s e o cliente
+# desistia. Com HPA, o video-service acompanha o pico como o worker ja fazia.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: video-service
+  labels:
+    app.kubernetes.io/name: video-service
+    app.kubernetes.io/part-of: fiapx
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: video-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # 70% do `requests.cpu` (250m) do container.
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 4
+          periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60

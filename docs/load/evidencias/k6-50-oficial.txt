@@ -1,0 +1,70 @@
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+     execution: local
+        script: k6/upload-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 50 max VUs, 5m30s max duration (incl. graceful stop):
+              * pico_de_uploads: 1 iterations for each of 50 VUs (maxDuration: 5m0s, gracefulStop: 30s)
+
+time="2026-09-20T15:25:32-03:00" level=info msg="usuario k6-1789928732020-39001@fiapx.local | 50 uploads simultaneos em http://acc470a77e5eb44d6a6df0ef1811848f-52c998528f15779e.elb.us-east-1.amazonaws.com" source=console
+
+running (0m01.0s), 50/50 VUs, 0 complete and 0 interrupted iterations
+pico_de_uploads   [   0% ] 50 VUs  0m00.4s/5m0s  00/50 iters, 1 per VU
+
+running (0m02.0s), 11/50 VUs, 39 complete and 0 interrupted iterations
+pico_de_uploads   [  78% ] 50 VUs  0m01.4s/5m0s  39/50 iters, 1 per VU
+time="2026-09-20T15:25:34-03:00" level=info msg="persistidos: 50/50 | status: {\"QUEUED\":40,\"COMPLETED\":10}" source=console
+
+running (0m03.0s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
+
+running (0m04.0s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
+
+running (0m05.0s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
+
+running (0m06.0s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
+
+running (0m07.0s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
+time="2026-09-20T15:25:39-03:00" level=info msg="aguardando worker: {\"COMPLETED\":50}" source=console
+     ✓ upload -> 202
+     ✓ upload devolve videoId
+
+     █ teardown
+
+       ✓ 50 enviados = 50 persistidos
+       ✓ 50 enviados = 50 processados
+
+     checks.........................: 100.00% ✓ 102      ✗ 0   
+     data_received..................: 51 kB   6.4 kB/s
+     data_sent......................: 770 kB  97 kB/s
+     http_req_blocked...............: avg=157.04ms min=2.47µs   med=166.85ms max=194.23ms p(90)=185.75ms p(95)=186.09ms
+     http_req_connecting............: avg=156.78ms min=0s       med=166.76ms max=194.01ms p(90)=185.64ms p(95)=185.98ms
+     http_req_duration..............: avg=899.92ms min=205.92ms med=810.27ms max=1.47s    p(90)=1.41s    p(95)=1.44s   
+       { expected_response:true }...: avg=899.92ms min=205.92ms med=810.27ms max=1.47s    p(90)=1.41s    p(95)=1.44s   
+     ✓ { name:upload }..............: avg=951.13ms min=553.2ms  med=817.27ms max=1.47s    p(90)=1.41s    p(95)=1.44s   
+     http_req_failed................: 0.00%   ✓ 0        ✗ 54  
+     http_req_receiving.............: avg=5.65ms   min=54.02µs  med=324.23µs max=134.81ms p(90)=2.14ms   p(95)=4.99ms  
+     http_req_sending...............: avg=149.53µs min=45.13µs  med=136.82µs max=316.94µs p(90)=245.38µs p(95)=273.03µs
+     http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
+     http_req_waiting...............: avg=894.12ms min=172.07ms med=809.94ms max=1.47s    p(90)=1.41s    p(95)=1.44s   
+     http_reqs......................: 54      6.813829/s
+     iteration_duration.............: avg=1.19s    min=561.87ms med=987.46ms max=5.75s    p(90)=1.58s    p(95)=1.59s   
+     iterations.....................: 50      6.309101/s
+   ✓ requests_lost..................: 0       0/s
+     uploads_accepted...............: 50      6.309101/s
+   ✓ uploads_rejected...............: 0       0/s
+   ✓ videos_not_completed...........: 0       0/s
+     vus............................: 0       min=0      max=50
+     vus_max........................: 50      min=50     max=50
+running (0m07.9s), 00/50 VUs, 50 complete and 0 interrupted iterations
+pico_de_uploads ✓ [ 100% ] 50 VUs  0m01.6s/5m0s  50/50 iters, 1 per VU
